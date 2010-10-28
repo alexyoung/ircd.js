@@ -1,0 +1,39 @@
+<pre>
+ ::::::::::..     .,-::::::::::::-.         ....:::::: .::::::. 
+ ;;;;;;;``;;;;  ,;;;'````' ;;,   `';,    ;;;;;;;;;````;;;`    ` 
+ [[[ [[[,/[[['  [[[        `[[     [[    ''`  `[[.    '[==/[[[[,
+ $$$ $$$$$$c    $$$         $$,    $$   ,,,    `$$      '''    $
+ 888 888b "88bo,`88bo,__,o, 888_,o8P'd8b888boood88     88b    dP
+ MMM MMMM   "W"   "YUMMMMMP"MMMMP"`  YMP"MMMMMMMM"      "YMmMY" 
+
+                                            A Node.JS IRC Server
+ ircd.js
+</pre>
+
+I'm implementing rfc1459/rfc2812 in "Node":http://nodejs.org/.
+
+The server will allow clients to connect, join channels, change topics; basic stuff.
+
+Done:
+
+* PING/PONG
+* PRIVMSG
+* MODE
+* JOIN
+* TOPIC
+* Connection garbage like MOTD
+* Basic data validation
+* Simple JSON config file
+
+Planned:
+
+* More modes
+* More validation (channel name)
+* More tests (I only wrote basic tests to get started)
+* Log files and logging options
+
+After the event horizon:
+
+* Passwords
+* Server to server communication
+
