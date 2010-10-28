@@ -590,8 +590,6 @@ tcpServer = net.createServer(function(stream) {
     user = null;
   });
 
-  stream.on('join', user.register);
-
   stream.on('error', function(error) {
     log('*** ERROR: ' + error);
   });
