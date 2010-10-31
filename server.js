@@ -68,8 +68,9 @@ Server = {
     },
 
     find: function(nick) {
+      nick = Server.normalizeName(nick);
       for (var i = 0; i < this.registered.length; i++) {
-        if (this.registered[i].nick === nick)
+        if (Server.normalizeName(this.registered[i].nick) === nick)
           return this.registered[i];
       }
     },
@@ -93,7 +94,7 @@ Server = {
     },
 
     find: function(channelName) {
-      return this.registered[channelName];
+      return this.registered[Server.normalizeName(channelName)];
     },
 
     join: function(user, channelName) {
@@ -109,7 +110,7 @@ Server = {
           names = '';
 
       if (!channel) {
-        channel = this.registered[channelName] = new Channel(channelName);
+        channel = this.registered[Server.normalizeName(channelName)] = new Channel(channelName);
         user.op(channel);
       }
 
@@ -121,7 +122,7 @@ Server = {
       }).join(' ');
 
       channel.users.forEach(function(channelUser) { 
-        channelUser.send(user.mask, 'JOIN', channelName);
+        channelUser.send(user.mask, 'JOIN', channel.name);
       });
 
       if (channel.topic) {
@@ -154,7 +155,7 @@ Server = {
         return;
       } else if (nick.length > 9 || nick.match(irc.validations.invalidNick)) {
         return user.send(irc.host, irc.errors.badNick, (user.nick || ''), nick, ':Erroneus nickname');
-      } else if (this.users.registered.some(function(u) { return u.nick === nick; })) {
+      } else if (this.valueExists(nick, this.users.registered, 'nick')) {
         return user.send(irc.host, irc.errors.nameInUse, '*', nick, ':is already in use');
       }
 
@@ -191,8 +192,17 @@ Server = {
 
     TOPIC: function(user, channelName, topic) {
       var channel = this.channels.find(channelName);
-      channel.topic = topic;
-      channel.send(user.mask, 'TOPIC', channelName, ':' + topic);
+
+      if (!channel) {
+        user.send(irc.host, irc.errors.noSuchNick, user.nick, channelName, ':No such nick/channel');
+      } else {
+        if (channel.modes.indexOf('t') === -1 || user.isOp(channel)) {
+          channel.topic = topic;
+          channel.send(user.mask, 'TOPIC', channel.name, ':' + topic);
+        } else {
+          user.send(irc.host, irc.errors.channelOpsReq, user.nick, channel.name, ":You're not channel operator");
+        }
+      }
     },
 
     // TODO: The RFC says the sender nick and actual user nick should be checked
@@ -245,10 +255,10 @@ Server = {
           } else if (modes[0] === '-') {
             channel.removeModes(user, modes, arg);
           } else if (modes === 'b') {
-            user.send(irc.host, irc.reply.endBan, user.nick, target, ':End of Channel Ban List');
+            user.send(irc.host, irc.reply.endBan, user.nick, channel.name, ':End of Channel Ban List');
           }
         } else {
-          user.send(irc.host, irc.reply.channelModes, user.nick, target, channel.modes);
+          user.send(irc.host, irc.reply.channelModes, user.nick, channel.name, channel.modes);
         }
       }
     },
@@ -262,7 +272,7 @@ Server = {
           user.send(irc.host,
                     irc.reply.who,
                     user.nick,
-                    target,
+                    channel.name,
                     channelUser.username,
                     channelUser.hostname,
                     config.hostname, // The IRC server rather than the network
@@ -271,7 +281,7 @@ Server = {
                     ':0',
                     channelUser.realname);
         });
-        user.send(irc.host, irc.reply.endWho, user.nick, target, ':End of /WHO list.');
+        user.send(irc.host, irc.reply.endWho, user.nick, channel.name, ':End of /WHO list.');
       } else {
         // TODO: User
       }
@@ -306,6 +316,22 @@ Server = {
       user.quit(message);
       delete user;
     }
+  },
+
+  normalizeName: function(name) {
+    return name &&
+           name.toLowerCase()
+           .replace(/{/g, '[')
+           .replace(/}/g, ']')
+           .replace(/\|/g, '\\');
+  },
+
+  valueExists: function(value, collection, field) {
+    var context = this;
+    value = context.normalizeName(value);
+    return collection.some(function(u) {
+      return context.normalizeName(u[field]) === value;
+    })
   },
 
   channelTarget: function(target) {
@@ -381,8 +407,9 @@ Channel.prototype = {
   },
 
   findUserNamed: function(nick) {
+    nick = Server.normalizeName(nick);
     for (var i = 0; i < this.users.length; i++) {
-      if (this.users[i].nick === nick) {
+      if (Server.normalizeName(this.users[i].nick) === nick) {
         return this.users[i];
       }
     }
@@ -396,8 +423,30 @@ Channel.prototype = {
     });
   },
 
+  opModeAdd: function(mode, user, arg) {
+    if (user.isOp(this)) {
+      if (this.modes.indexOf(mode) === -1) {
+        this.modes = this.modes + mode;
+        this.send(user.mask, 'MODE', this.name, '+' + mode, this.name);
+      }
+    } else {
+      user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
+    }
+  },
+
+  opModeRemove: function(mode, user, arg) {
+    if (user.isOp(this)) {
+      if (this.modes.indexOf(mode) !== -1) {
+        this.modes = this.modes.replace(mode, '');
+        this.send(user.mask, 'MODE', this.name, '-' + mode, this.name);
+      }
+    } else {
+      user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
+    }
+  },
+
   addMode: {
-    'o': function(user, arg) {
+    o: function(user, arg) {
       if (user.isOp(this)) {
         var targetUser = this.findUserNamed(arg);
         if (targetUser && !targetUser.isOp(this)) {
@@ -409,15 +458,12 @@ Channel.prototype = {
       }
     },
 
-    'n': function(user, arg) {
-      if (user.isOp(this)) {
-        if (this.modes.indexOf('n') === -1) {
-          this.modes = this.modes + 'n';
-          this.send(user.mask, 'MODE', this.name, '+n', this.name);
-        }
-      } else {
-        user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
-      }
+    n: function(user, arg) {
+      this.opModeAdd('n', user, arg);
+    },
+
+    t: function(user, arg) {
+      this.opModeAdd('t', user, arg);
     }
   },
 
@@ -430,7 +476,7 @@ Channel.prototype = {
   },
 
   removeMode: {
-    'o': function(user, arg) {
+    o: function(user, arg) {
       if (user.isOp(this)) {
         var targetUser = this.findUserNamed(arg);
         if (targetUser && targetUser.isOp(this)) {
@@ -442,15 +488,12 @@ Channel.prototype = {
       }
     },
 
-    'n': function(user, arg) {
-      if (user.isOp(this)) {
-        if (this.modes.indexOf('n') !== -1) {
-          this.modes = this.modes.replace(/n/, '');
-          this.send(user.mask, 'MODE', this.name, '-n', this.name);
-        }
-      } else {
-        user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
-      }
+    n: function(user, arg) {
+      this.opModeRemove('n', user, arg);
+    },
+
+    t: function(user, arg) {
+      this.opModeRemove('t', user, arg);
     }
   },
 
@@ -550,7 +593,7 @@ User.prototype = {
     var user = Server.users.find(nick);
     this.updated = new Date();
     if (user) {
-      user.send(this.mask, 'PRIVMSG', nick, ':' + message);
+      user.send(this.mask, 'PRIVMSG', user.nick, ':' + message);
     } else {
       this.send(irc.host, irc.errors.noSuchNick, this.nick, nick, ':No such nick/channel');
     }
