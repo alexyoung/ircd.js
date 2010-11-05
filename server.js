@@ -106,8 +106,7 @@ Server = {
       // (^G or ASCII 7), or a comma (',' which is used as a list item
       // separator by the protocol).
 
-      var channel = this.find(channelName),
-          names = '';
+      var channel = this.find(channelName);
 
       if (!channel) {
         channel = this.registered[Server.normalizeName(channelName)] = new Channel(channelName);
@@ -116,10 +115,6 @@ Server = {
 
       channel.users.push(user);
       user.channels.push(channel);
-
-      names = channel.users.map(function(user) {
-        return user.channelNick(channel);
-      }).join(' ');
 
       channel.users.forEach(function(channelUser) { 
         channelUser.send(user.mask, 'JOIN', channel.name);
@@ -131,7 +126,7 @@ Server = {
         user.send(irc.host, irc.reply.noTopic, user.nick, channel.name, ':No topic is set');
       }
 
-      user.send(irc.host, irc.reply.nameReply, user.nick, channel.type, channel.name, ':' + names);
+      user.send(irc.host, irc.reply.nameReply, user.nick, channel.type, channel.name, ':' + channel.names);
       user.send(irc.host, irc.reply.endNames, user.nick, channel.name, ':End of /NAMES list.');
     }
   },
@@ -263,8 +258,22 @@ Server = {
       }
     },
 
-    // Make sure these respect secret/private flags:
-    // TODO: NAMES
+    NAMES: function(user, targets) {
+      // TODO: ERR_TOOMANYMATCHES
+      // TODO: ERR_NOSUCHSERVER
+      if (targets) {
+        targets = targets.split(',');
+        targets.forEach(function(target) {
+          // if channel is secret or private, ignore
+          var channel = Server.channels.find(target);
+          if (channel && (channel.isPublic || channel.isMember(user))) {
+            user.send(irc.host, irc.reply.nameReply, user.nick, channel.type, channel.name, ':' + channel.names);
+          }
+        });
+      }
+      user.send(irc.host, irc.reply.endNames, user.nick, '*', ':End of /NAMES list.');
+    },
+
     // TODO: LIST
 
     WHO: function(user, target) {
@@ -397,12 +406,23 @@ function Channel(name) {
     this._modes = modes.split('');
   });
 
+
+  this.__defineGetter__('isPublic', function() {
+    return !this.isSecret && !this.isPrivate;
+  });
+
   this.__defineGetter__('isSecret', function() {
     return this._modes.indexOf('s') > -1;
   });
 
   this.__defineGetter__('isPrivate', function() {
     return this._modes.indexOf('p') > -1;
+  });
+
+  this.__defineGetter__('names', function() {
+    return this.users.map(function(user) {
+      return user.channelNick(this);
+    }).join(' ');
   });
 
   this.__defineGetter__('type', function() {
