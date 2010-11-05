@@ -131,7 +131,7 @@ Server = {
         user.send(irc.host, irc.reply.noTopic, user.nick, channel.name, ':No topic is set');
       }
 
-      user.send(irc.host, irc.reply.nameReply, user.nick, '=', channel.name, ':' + names);
+      user.send(irc.host, irc.reply.nameReply, user.nick, channel.type, channel.name, ':' + names);
       user.send(irc.host, irc.reply.endNames, user.nick, channel.name, ':End of /NAMES list.');
     }
   },
@@ -263,6 +263,10 @@ Server = {
       }
     },
 
+    // Make sure these respect secret/private flags:
+    // TODO: NAMES
+    // TODO: LIST
+
     WHO: function(user, target) {
       if (Server.channelTarget(target)) {
         // TODO: Wildcards
@@ -292,6 +296,8 @@ Server = {
       var target = this.users.find(nickmask);
       if (target) {
         var channels = target.channels.map(function(channel) {
+          if (channel.isSecret && !channel.isMember(user)) return;
+
           if (target.isOp(channel)) {
             return '@' + channel.name;
           } else {
@@ -390,6 +396,24 @@ function Channel(name) {
   this.__defineSetter__('modes', function(modes) {
     this._modes = modes.split('');
   });
+
+  this.__defineGetter__('isSecret', function() {
+    return this._modes.indexOf('s') > -1;
+  });
+
+  this.__defineGetter__('isPrivate', function() {
+    return this._modes.indexOf('p') > -1;
+  });
+
+  this.__defineGetter__('type', function() {
+    if (this.isPrivate) {
+      return '*';
+    } else if (this.isSecret) {
+      return '@';
+    } else {
+      return '=';
+    }
+  });
 }
 
 Channel.prototype = {
@@ -413,6 +437,10 @@ Channel.prototype = {
         return this.users[i];
       }
     }
+  },
+
+  isMember: function(user) {
+    return this.users.indexOf(user) !== -1;
   },
 
   addModes: function(user, modes, arg) {
@@ -464,6 +492,14 @@ Channel.prototype = {
 
     t: function(user, arg) {
       this.opModeAdd('t', user, arg);
+    },
+
+    p: function(user, arg) {
+      this.opModeAdd('p', user, arg);
+    },
+
+    s: function(user, arg) {
+      this.opModeAdd('s', user, arg);
     }
   },
 
@@ -494,6 +530,14 @@ Channel.prototype = {
 
     t: function(user, arg) {
       this.opModeRemove('t', user, arg);
+    },
+
+    p: function(user, arg) {
+      this.opModeRemove('p', user, arg);
+    },
+
+    s: function(user, arg) {
+      this.opModeRemove('s', user, arg);
     }
   },
 
