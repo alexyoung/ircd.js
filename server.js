@@ -166,13 +166,15 @@ Server = {
       Server.users.register(user, username, hostname, servername, realname);
     },
 
-    JOIN: function(user, channelName) {
-      if (!Server.channelTarget(channelName)
-          || channelName.match(irc.validations.invalidChannel)) {
-        user.send(irc.host, irc.errors.noSuchChannel, ':No such channel');
-      } else {
-        this.channels.join(user, channelName);
-      }
+    JOIN: function(user, channelNames) {
+      channelNames.split(',').forEach(function(channelName) {
+        if (!Server.channelTarget(channelName)
+            || channelName.match(irc.validations.invalidChannel)) {
+          user.send(irc.host, irc.errors.noSuchChannel, ':No such channel');
+        } else {
+          Server.channels.join(user, channelName);
+        }
+      });
     },
 
     // TODO: this can accept multiple channels according to the spec
@@ -255,12 +257,41 @@ Server = {
         } else {
           user.send(irc.host, irc.reply.channelModes, user.nick, channel.name, channel.modes);
         }
+      } else {
+        // User modes
       }
     },
 
-    NAMES: function(user, targets) {
+    LIST: function(user, targets) {
       // TODO: ERR_TOOMANYMATCHES
       // TODO: ERR_NOSUCHSERVER
+      user.send(irc.host, irc.reply.listStart, user.nick, 'Channel', ':Users  Name');
+      var channels = {};
+      if (targets) {
+        targets = targets.split(',');
+        targets.forEach(function(target) {
+          var channel = Server.channels.find(target);
+          if (channel) {
+            channels[channel.name] = channel;
+          }
+        });
+      } else {
+        channels = this.channels.registered;
+      }
+
+      for (var i in channels) {
+        var channel = channels[i];
+        // if channel is secret or private, ignore
+        if (channel.isPublic || channel.isMember(user)) {
+          user.send(irc.host, irc.reply.list, user.nick, channel.name, channel.memberCount, ':[' + channel.modes + '] ' + channel.topic);
+        }
+      }
+
+      user.send(irc.host, irc.reply.listEnd, user.nick, ':End of /LIST');
+    },
+
+    // TODO: LIST
+    NAMES: function(user, targets) {
       if (targets) {
         targets = targets.split(',');
         targets.forEach(function(target) {
@@ -271,10 +302,8 @@ Server = {
           }
         });
       }
-      user.send(irc.host, irc.reply.endNames, user.nick, '*', ':End of /NAMES list.');
+      user.send(irc.host, irc.reply.endNames, user.nick, '*', ':End of /NAMES list.'); 
     },
-
-    // TODO: LIST
 
     WHO: function(user, target) {
       if (Server.channelTarget(target)) {
@@ -395,7 +424,7 @@ Server = {
 function Channel(name) {
   this.name = name;
   this.users = [];
-  this.topic = null;
+  this.topic = '';
   this._modes = ['n', 't', 'r'];
 
   this.__defineGetter__('modes', function() {
@@ -406,6 +435,9 @@ function Channel(name) {
     this._modes = modes.split('');
   });
 
+  this.__defineGetter__('memberCount', function() {
+    return this.users.length;
+  });
 
   this.__defineGetter__('isPublic', function() {
     return !this.isSecret && !this.isPrivate;
@@ -420,8 +452,9 @@ function Channel(name) {
   });
 
   this.__defineGetter__('names', function() {
+    var channel = this;
     return this.users.map(function(user) {
-      return user.channelNick(this);
+      return user.channelNick(channel);
     }).join(' ');
   });
 
@@ -625,7 +658,7 @@ User.prototype = {
   },
 
   op: function(channel) {
-    this.channelModes[channel.name] = 'o';
+    this.channelModes[channel.name] += 'o';
   },
 
   deop: function(channel) {

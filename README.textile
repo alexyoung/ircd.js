@@ -21,9 +21,12 @@ Done:
 * MODE
 * JOIN
 * TOPIC
+* NAMES
+* LIST
 * Connection garbage like MOTD
 * Basic data validation
 * Simple JSON config file
+* Modes: o, n, t, p, s
 
 Planned:
 
