@@ -10,6 +10,14 @@
  ircd.js
 </pre>
 
+h3. News
+
+Twitter: "@alex_young":http://twitter.com/alex_young.
+
+* [2010-11-07] Added ban support
+
+h3. About
+
 I'm implementing rfc1459/rfc2812 in "Node":http://nodejs.org/.
 
 The server will allow clients to connect, join channels, change topics; basic stuff.
@@ -26,7 +34,7 @@ Done:
 * Connection garbage like MOTD
 * Basic data validation
 * Simple JSON config file
-* Modes: o, n, t, p, s
+* Modes: o, n, t, p, s, b
 
 Planned:
 

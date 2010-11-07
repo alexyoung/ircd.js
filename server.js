@@ -113,6 +113,11 @@ Server = {
         user.op(channel);
       }
 
+      if (channel.isBanned(user)) {
+        user.send(irc.host, irc.errors.banned, user.nick, channel.name, ':Cannot join channel (+b)');
+        return;
+      }
+
       channel.users.push(user);
       user.channels.push(channel);
 
@@ -230,12 +235,12 @@ Server = {
 
     MODE: function(user, target, modes, arg) {
       // <channel> {[+|-]|o|p|s|i|t|n|b|v} [<limit>] [<user>] [<ban mask>]
-      // o - give/take channel operator privileges [done]
-      // p - private channel flag
-      // s - secret channel flag;
-      // i - invite-only channel flag;
-      // t - topic settable by channel operator only flag;
-      // n - no messages to channel from clients on the outside; [done]
+      // o - give/take channel operator privileges                   [done]
+      // p - private channel flag                                    [done]
+      // s - secret channel flag;                                    [done] - what's the difference?
+      // i - invite-only channel flag;                               
+      // t - topic settable by channel operator only flag;           [done]
+      // n - no messages to channel from clients on the outside;     [done]
       // m - moderated channel;
       // l - set the user limit to channel;
       // b - set a ban mask to keep users out;
@@ -252,6 +257,9 @@ Server = {
           } else if (modes[0] === '-') {
             channel.removeModes(user, modes, arg);
           } else if (modes === 'b') {
+            channel.banned.forEach(function(ban) {
+              user.send(irc.host, irc.reply.banList, user.nick, channel.name, ban.mask, ban.user.nick, ban.timestamp);
+            });
             user.send(irc.host, irc.reply.endBan, user.nick, channel.name, ':End of Channel Ban List');
           }
         } else {
@@ -426,6 +434,7 @@ function Channel(name) {
   this.users = [];
   this.topic = '';
   this._modes = ['n', 't', 'r'];
+  this.banned = [];
 
   this.__defineGetter__('modes', function() {
     return '+' + this._modes.join(''); 
@@ -470,6 +479,26 @@ function Channel(name) {
 }
 
 Channel.prototype = {
+  isBanned: function(user) {
+    return this.banned.some(function(ban) {
+      return user.matchesMask(ban.mask);
+    });
+  },
+
+  banMaskExists: function(mask) {
+    return this.banned.some(function(ban) {
+      return ban.mask === mask;
+    });
+  },
+
+  findBan: function(mask) {
+    for (var i in this.banned) {
+      if (this.banned[i].mask === mask) {
+        return this.banned[i];
+      }
+    }
+  },
+
   send: function() {
     var message = arguments.length === 1 ? arguments[0] : Array.prototype.slice.call(arguments).join(' ');
 
@@ -553,6 +582,18 @@ Channel.prototype = {
 
     s: function(user, arg) {
       this.opModeAdd('s', user, arg);
+    },
+
+    b: function(user, arg) {
+      if (user.isOp(this)) {
+        // TODO: Valid ban mask?
+        if (!this.banMaskExists(arg)) {
+          this.banned.push({ user: user, mask: arg, timestamp: (new Date()).valueOf() });
+          this.send(user.mask, 'MODE', this.name, '+b', ':' + arg);
+        }
+      } else {
+        user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
+      }
     }
   },
 
@@ -591,6 +632,19 @@ Channel.prototype = {
 
     s: function(user, arg) {
       this.opModeRemove('s', user, arg);
+    },
+
+    b: function(user, arg) {
+      if (user.isOp(this)) {
+        // TODO: Valid ban mask?
+        var ban = this.findBan(arg);
+        if (ban) {
+          delete this.banned[this.banned.indexOf(ban)];
+          this.send(user.mask, 'MODE', this.name, '-b', ':' + arg);
+        }
+      } else {
+        user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
+      }
     }
   },
 
@@ -645,6 +699,27 @@ User.prototype = {
       this.stream.write(message + '\r\n');
     } catch (exception) {
       log(exception);
+    }
+  },
+
+  expandMask: function(mask) {
+    return mask.replace(/\./g, '\\.').
+                replace(/\*/g, '.*');
+  },
+
+  matchesMask: function(mask) {
+    var parts = mask.match(/([^!]*)!([^@]*)@(.*)/),
+        matched = true;
+    parts = parts.slice(1, 4).map(this.expandMask);
+
+    if (!this.nick.match(parts[0])) {
+      return false;
+    } else if (!this.username.match(parts[1])) {
+      return false;
+    } else if (!this.hostname.match(parts[2])) {
+      return false;
+    } else {
+      return true;
     }
   },
 
