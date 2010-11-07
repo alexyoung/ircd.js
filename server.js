@@ -243,7 +243,7 @@ Server = {
       // n - no messages to channel from clients on the outside;     [done]
       // m - moderated channel;
       // l - set the user limit to channel;
-      // b - set a ban mask to keep users out;
+      // b - set a ban mask to keep users out;                       [done]
       // v - give/take the ability to speak on a moderated channel;
       // k - set a channel key (password).
 
