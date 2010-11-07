@@ -400,7 +400,7 @@ Server = {
     }
 
     return {
-      command: args[0],
+      command: args[0].toUpperCase(),
       args: args.slice(1)
     };
   },
