@@ -487,7 +487,6 @@ function Channel(name) {
 
 Channel.prototype = {
   isBanned: function(user) {
-    console.log(this.banned);
     return this.banned.some(function(ban) {
       return user.matchesMask(ban.mask);
     });
