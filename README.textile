@@ -14,6 +14,7 @@ h3. News
 
 Twitter: "@alex_young":http://twitter.com/alex_young.
 
+* [2010-11-11] Added voice/devoice support, and removing channel modes on part
 * [2010-11-07] Added ban support, commands are no-longer case sensitive
 
 h3. About

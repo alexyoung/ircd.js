@@ -221,13 +221,16 @@ Server = {
         user.send(irc.host, irc.errors.noTextToSend, ':No text to send');
       } else if (Server.channelTarget(target)) {
         var channel = this.channels.find(target);
-        if (user.channels.indexOf(channel) === -1) {
+        if (channel.isModerated && !user.isVoiced(channel)) {
+          user.send(irc.host, irc.errors.cannotSend, channel.name, ':Cannot send to channel');
+        } else if (user.channels.indexOf(channel) === -1) {
           if (channel.modes.indexOf('n') !== -1) {
             user.send(irc.host, irc.errors.cannotSend, channel.name, ':Cannot send to channel');
             return;
           }
+        } else {
+          this.channels.message(user, channel, message);
         }
-        this.channels.message(user, channel, message);
       } else {
         user.message(target, message);
       }
@@ -241,7 +244,7 @@ Server = {
       // i - invite-only channel flag;                               
       // t - topic settable by channel operator only flag;           [done]
       // n - no messages to channel from clients on the outside;     [done]
-      // m - moderated channel;
+      // m - moderated channel;                                      [done]
       // l - set the user limit to channel;
       // b - set a ban mask to keep users out;                       [done]
       // v - give/take the ability to speak on a moderated channel;
@@ -266,7 +269,7 @@ Server = {
           user.send(irc.host, irc.reply.channelModes, user.nick, channel.name, channel.modes);
         }
       } else {
-        // User modes
+        // TODO: Server user modes
       }
     },
 
@@ -460,6 +463,10 @@ function Channel(name) {
     return this._modes.indexOf('p') > -1;
   });
 
+  this.__defineGetter__('isModerated', function() {
+    return this._modes.indexOf('m') > -1;
+  });
+
   this.__defineGetter__('names', function() {
     var channel = this;
     return this.users.map(function(user) {
@@ -480,6 +487,7 @@ function Channel(name) {
 
 Channel.prototype = {
   isBanned: function(user) {
+    console.log(this.banned);
     return this.banned.some(function(ban) {
       return user.matchesMask(ban.mask);
     });
@@ -568,6 +576,22 @@ Channel.prototype = {
       }
     },
 
+    v: function(user, arg) {
+      if (user.isOp(this)) {
+        var targetUser = this.findUserNamed(arg);
+        if (targetUser && !targetUser.isVoiced(this)) {
+          targetUser.voice(this);
+          this.send(user.mask, 'MODE', this.name, '+v', targetUser.nick);
+        }
+      } else {
+        user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
+      }
+    },
+
+    m: function(user, arg) {
+      this.opModeAdd('m', user, arg);
+    },
+
     n: function(user, arg) {
       this.opModeAdd('n', user, arg);
     },
@@ -618,6 +642,22 @@ Channel.prototype = {
       }
     },
 
+    v: function(user, arg) {
+      if (user.isOp(this)) {
+        var targetUser = this.findUserNamed(arg);
+        if (targetUser && targetUser.isVoiced(this)) {
+          targetUser.devoice(this);
+          this.send(user.mask, 'MODE', this.name, '-v', targetUser.nick);
+        }
+      } else {
+        user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
+      }
+    },
+
+    m: function(user, arg) {
+      this.opModeRemove('m', user, arg);
+    },
+
     n: function(user, arg) {
       this.opModeRemove('n', user, arg);
     },
@@ -651,6 +691,7 @@ Channel.prototype = {
   part: function(user) {
     delete this.users[this.users.indexOf(user)];
     delete user.channels[user.channels.indexOf(this)];
+    delete user.channelModes[this];
   }
 };
 
@@ -708,9 +749,10 @@ User.prototype = {
   },
 
   matchesMask: function(mask) {
-    var parts = mask.match(/([^!]*)!([^@]*)@(.*)/),
-        matched = true;
-    parts = parts.slice(1, 4).map(this.expandMask);
+    var parts = mask.match(/([^!]*)!([^@]*)@(.*)/) || [],
+        matched = true,
+        lastPart = parts.length < 4 ? parts.length : 4;
+    parts = parts.slice(1, lastPart).map(this.expandMask);
 
     if (!this.nick.match(parts[0])) {
       return false;
@@ -728,17 +770,31 @@ User.prototype = {
   },
 
   isOp: function(channel) {
-    if (this.channelModes[channel.name])
-      return this.channelModes[channel.name].match(/o/);
+    if (this.channelModes[channel])
+      return this.channelModes[channel].match(/o/);
   },
 
   op: function(channel) {
-    this.channelModes[channel.name] += 'o';
+    this.channelModes[channel] += 'o';
   },
 
   deop: function(channel) {
-    if (this.channelModes[channel.name])
-      this.channelModes[channel.name] = this.channelModes[channel.name].replace(/o/, '');
+    if (this.channelModes[channel])
+      this.channelModes[channel] = this.channelModes[channel].replace(/o/, '');
+  },
+
+  isVoiced: function(channel) {
+    if (this.channelModes[channel])
+      return this.channelModes[channel].match(/v/) || this.isOp(channel);
+  },
+
+  voice: function(channel) {
+    this.channelModes[channel] += 'v';
+  },
+
+  devoice: function(channel) {
+    if (this.channelModes[channel])
+      this.channelModes[channel] = this.channelModes[channel].replace(/v/, '');
   },
 
   hostLookup: function() {
