@@ -118,6 +118,11 @@ Server = {
         return;
       }
 
+      if (channel.isLimited && channel.users.length >= channel.userLimit) {
+        user.send(irc.host, irc.errors.channelIsFull, user.nick, channel.name, ':Channel is full.');
+        return;
+      }
+
       channel.users.push(user);
       user.channels.push(channel);
 
@@ -245,9 +250,9 @@ Server = {
       // t - topic settable by channel operator only flag;           [done]
       // n - no messages to channel from clients on the outside;     [done]
       // m - moderated channel;                                      [done]
-      // l - set the user limit to channel;
+      // l - set the user limit to channel;                          [done]
       // b - set a ban mask to keep users out;                       [done]
-      // v - give/take the ability to speak on a moderated channel;
+      // v - give/take the ability to speak on a moderated channel;  [done]
       // k - set a channel key (password).
 
       if (Server.channelTarget(target)) {
@@ -438,6 +443,7 @@ function Channel(name) {
   this.topic = '';
   this._modes = ['n', 't', 'r'];
   this.banned = [];
+  this.userLimit = 0;
 
   this.__defineGetter__('modes', function() {
     return '+' + this._modes.join(''); 
@@ -449,6 +455,10 @@ function Channel(name) {
 
   this.__defineGetter__('memberCount', function() {
     return this.users.length;
+  });
+
+  this.__defineGetter__('isLimited', function() {
+    return this._modes.indexOf('l') > -1;
   });
 
   this.__defineGetter__('isPublic', function() {
@@ -545,10 +555,12 @@ Channel.prototype = {
       if (this.modes.indexOf(mode) === -1) {
         this.modes = this.modes + mode;
         this.send(user.mask, 'MODE', this.name, '+' + mode, this.name);
+        return true;
       }
     } else {
       user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
     }
+    return false;
   },
 
   opModeRemove: function(mode, user, arg) {
@@ -556,10 +568,12 @@ Channel.prototype = {
       if (this.modes.indexOf(mode) !== -1) {
         this.modes = this.modes.replace(mode, '');
         this.send(user.mask, 'MODE', this.name, '-' + mode, this.name);
+        return true;
       }
     } else {
       user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
     }
+    return false;
   },
 
   addMode: {
@@ -581,6 +595,19 @@ Channel.prototype = {
         if (targetUser && !targetUser.isVoiced(this)) {
           targetUser.voice(this);
           this.send(user.mask, 'MODE', this.name, '+v', targetUser.nick);
+        }
+      } else {
+        user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
+      }
+    },
+
+    l: function(user, arg) {
+      if (user.isOp(this)) {
+        var limit = parseInt(arg, 10);
+        if (this.userLimit != limit) {
+          this.modes = this.modes + 'l';
+          this.userLimit = limit;
+          this.send(user.mask, 'MODE', this.name, '+l ' + arg, this.name);
         }
       } else {
         user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
@@ -650,6 +677,12 @@ Channel.prototype = {
         }
       } else {
         user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
+      }
+    },
+
+    l: function(user, arg) {
+      if (this.opModeRemove('l', user, arg, ' ' + arg)) {
+        this.userLimit = 0;
       }
     },
 
