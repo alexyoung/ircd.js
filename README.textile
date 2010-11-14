@@ -37,7 +37,7 @@ Done:
 * Connection garbage like MOTD
 * Basic data validation
 * Simple JSON config file
-* Modes: o, n, t, p, s, b
+* Modes: o, p, s, t, n, m, l, b, v, k
 
 Planned:
 

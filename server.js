@@ -252,7 +252,9 @@ Server = {
     },
 
     MODE: function(user, target, modes, arg) {
+      // TODO: This should work with multiple parameters, like the definition:
       // <channel> {[+|-]|o|p|s|i|t|n|b|v} [<limit>] [<user>] [<ban mask>]
+
       // o - give/take channel operator privileges                   [done]
       // p - private channel flag                                    [done]
       // s - secret channel flag;                                    [done] - what's the difference?
