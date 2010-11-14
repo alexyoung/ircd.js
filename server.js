@@ -97,7 +97,7 @@ Server = {
       return this.registered[Server.normalizeName(channelName)];
     },
 
-    join: function(user, channelName) {
+    join: function(user, channelName, key) {
       // TODO: valid channel name?
       // Channels names are strings (beginning with a '&' or '#' character) of
       // length up to 200 characters.  Apart from the the requirement that the
@@ -121,6 +121,13 @@ Server = {
       if (channel.isLimited && channel.users.length >= channel.userLimit) {
         user.send(irc.host, irc.errors.channelIsFull, user.nick, channel.name, ':Channel is full.');
         return;
+      }
+
+      if (channel.key) {
+        if (key !== channel.key) {
+          user.send(irc.host, irc.errors.badChannelKey, user.nick, this.name, ":Invalid channel key");
+          return;
+        }
       }
 
       channel.users.push(user);
@@ -177,12 +184,15 @@ Server = {
     },
 
     JOIN: function(user, channelNames) {
-      channelNames.split(',').forEach(function(channelName) {
+      channelNames.split(',').forEach(function(args) {
+        var nameParts = args.split(' '),
+            channelName = nameParts[0],
+            key = nameParts[1];
         if (!Server.channelTarget(channelName)
             || channelName.match(irc.validations.invalidChannel)) {
           user.send(irc.host, irc.errors.noSuchChannel, ':No such channel');
         } else {
-          Server.channels.join(user, channelName);
+          Server.channels.join(user, channelName, key);
         }
       });
     },
@@ -253,7 +263,7 @@ Server = {
       // l - set the user limit to channel;                          [done]
       // b - set a ban mask to keep users out;                       [done]
       // v - give/take the ability to speak on a moderated channel;  [done]
-      // k - set a channel key (password).
+      // k - set a channel key (password).                           [done]
 
       if (Server.channelTarget(target)) {
         var channel = this.channels.find(target);
@@ -444,6 +454,7 @@ function Channel(name) {
   this._modes = ['n', 't', 'r'];
   this.banned = [];
   this.userLimit = 0;
+  this.key = null;
 
   this.__defineGetter__('modes', function() {
     return '+' + this._modes.join(''); 
@@ -496,6 +507,10 @@ function Channel(name) {
 }
 
 Channel.prototype = {
+  isValidKey: function(key) {
+    return key && key.length > 1 && key.length < 9 && !key.match(irc.validations.invalidChannelKey);
+  },
+
   isBanned: function(user) {
     return this.banned.some(function(ban) {
       return user.matchesMask(ban.mask);
@@ -553,7 +568,7 @@ Channel.prototype = {
   opModeAdd: function(mode, user, arg) {
     if (user.isOp(this)) {
       if (this.modes.indexOf(mode) === -1) {
-        this.modes = this.modes + mode;
+        this.modes += mode;
         this.send(user.mask, 'MODE', this.name, '+' + mode, this.name);
         return true;
       }
@@ -601,11 +616,28 @@ Channel.prototype = {
       }
     },
 
+    k: function(user, arg) {
+      if (user.isOp(this)) {
+        if (this.key) {
+          user.send(irc.host, irc.errors.keySet, user.nick, this.name, ":Channel key already set");
+        } else if (this.isValidKey(arg)) {
+          this.key = arg;
+          this.modes += 'k';
+          this.send(user.mask, 'MODE', this.name, '+k ' + arg);
+        } else {
+          // TODO: I thought 475 was just returned when joining the channel
+          user.send(irc.host, irc.errors.badChannelKey, user.nick, this.name, ":Invalid channel key");
+        }
+      } else {
+        user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
+      }
+    },
+
     l: function(user, arg) {
       if (user.isOp(this)) {
         var limit = parseInt(arg, 10);
         if (this.userLimit != limit) {
-          this.modes = this.modes + 'l';
+          this.modes += 'l';
           this.userLimit = limit;
           this.send(user.mask, 'MODE', this.name, '+l ' + arg, this.name);
         }
@@ -677,6 +709,12 @@ Channel.prototype = {
         }
       } else {
         user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
+      }
+    },
+
+    k: function(user, arg) {
+      if (this.opModeRemove('k', user, arg)) {
+        this.key = null;
       }
     },
 
