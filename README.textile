@@ -14,6 +14,7 @@ h3. News
 
 Twitter: "@alex_young":http://twitter.com/alex_young.
 
+* [2010-11-16] Added +i and INVITE
 * [2010-11-14] Added +k (channel key)
 * [2010-11-12] Added +l (user limit)
 * [2010-11-11] Added voice/devoice support, and removing channel modes on part
@@ -34,10 +35,11 @@ Done:
 * TOPIC
 * NAMES
 * LIST
+* INVITE
 * Connection garbage like MOTD
 * Basic data validation
 * Simple JSON config file
-* Modes: o, p, s, t, n, m, l, b, v, k
+* Modes: o, p, s, t, n, m, i, l, b, v, k
 
 Planned:
 

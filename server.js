@@ -113,6 +113,11 @@ Server = {
         user.op(channel);
       }
 
+      if (channel.isInviteOnly && !channel.onInviteList(user)) {
+        user.send(irc.host, irc.errors.inviteOnly, user.nick, channel.name, ':Cannot join channel (+i)');
+        return;
+      }
+
       if (channel.isBanned(user)) {
         user.send(irc.host, irc.errors.banned, user.nick, channel.name, ':Cannot join channel (+b)');
         return;
@@ -251,6 +256,39 @@ Server = {
       }
     },
 
+    INVITE: function(user, nick, channelName) {
+      var channel = this.channels.find(channelName),
+          targetUser = this.users.find(nick);
+
+      // TODO: Can this accept multiple channel names?
+      // TODO: ERR_NOTONCHANNEL
+      if (!targetUser) {
+        user.send(irc.host, irc.errors.noSuchNick, user.nick, nick, ':No such nick/channel');
+        return;
+      } else if (channel) {
+        if (channel.isInviteOnly && !user.isOp(channel)) {
+          user.send(irc.host, irc.errors.channelOpsReq, user.nick, channel.name, ":You're not channel operator");
+          return;
+        } else if (channel.onInviteList(targetUser)) {
+          user.send(irc.host, irc.errors.userOnChannel, user.nick, targetUser.nick, ':User is already on that channel');
+          return;
+        }
+      } else if (!Server.channelTarget(channelName)) {
+        // Invalid channel
+        return;
+      } else {
+        // TODO: Make this a register function
+        // Create the channel
+        channel = this.channels.registered[Server.normalizeName(channelName)] = new Channel(channelName);
+      }
+
+      user.send(irc.host, irc.reply.inviting, user.nick, targetUser.nick, channelName);
+      targetUser.send(user.mask, 'INVITE', targetUser.nick, ':' + channelName);
+
+      // TODO: How does an invite list get cleared?
+      channel.inviteList.push(targetUser.nick);
+    },
+
     MODE: function(user, target, modes, arg) {
       // TODO: This should work with multiple parameters, like the definition:
       // <channel> {[+|-]|o|p|s|i|t|n|b|v} [<limit>] [<user>] [<ban mask>]
@@ -258,7 +296,7 @@ Server = {
       // o - give/take channel operator privileges                   [done]
       // p - private channel flag                                    [done]
       // s - secret channel flag;                                    [done] - what's the difference?
-      // i - invite-only channel flag;                               
+      // i - invite-only channel flag;                               [done] 
       // t - topic settable by channel operator only flag;           [done]
       // n - no messages to channel from clients on the outside;     [done]
       // m - moderated channel;                                      [done]
@@ -457,6 +495,7 @@ function Channel(name) {
   this.banned = [];
   this.userLimit = 0;
   this.key = null;
+  this.inviteList = [];
 
   this.__defineGetter__('modes', function() {
     return '+' + this._modes.join(''); 
@@ -490,6 +529,10 @@ function Channel(name) {
     return this._modes.indexOf('m') > -1;
   });
 
+  this.__defineGetter__('isInviteOnly', function() {
+    return this._modes.indexOf('i') > -1;
+  });
+
   this.__defineGetter__('names', function() {
     var channel = this;
     return this.users.map(function(user) {
@@ -509,6 +552,13 @@ function Channel(name) {
 }
 
 Channel.prototype = {
+  onInviteList: function(user) {
+    var userNick = Server.normalizeName(user.nick);
+    return this.inviteList.some(function(nick) {
+      return Server.normalizeName(nick) === userNick;
+    });
+  },
+
   isValidKey: function(key) {
     return key && key.length > 1 && key.length < 9 && !key.match(irc.validations.invalidChannelKey);
   },
@@ -618,6 +668,10 @@ Channel.prototype = {
       }
     },
 
+    i: function(user, arg) {
+      this.opModeAdd('i', user, arg);
+    },
+
     k: function(user, arg) {
       if (user.isOp(this)) {
         if (this.key) {
@@ -712,6 +766,10 @@ Channel.prototype = {
       } else {
         user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
       }
+    },
+
+    i: function(user, arg) {
+      this.opModeRemove('i', user, arg);
     },
 
     k: function(user, arg) {
