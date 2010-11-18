@@ -154,6 +154,26 @@ Server = {
     }
   },
 
+  history: {
+    items: [],
+
+    add: function(user) {
+      this.items.unshift({ nick: user.nick,
+                           username: user.username,
+                           realname: user.realname,
+                           host: user.hostname,
+                           server: user.server,
+                           time: new Date() });
+      this.items.slice(0, config.whoWasLimit);
+    },
+
+    find: function(nick) {
+      return this.items.filter(function(item) {
+        return nick === item.nick;
+      });
+    }
+  },
+
   commands: {
     PING: function(user, hostname) {
       user.send(irc.host, 'PONG', config.hostname, irc.host);
@@ -437,8 +457,29 @@ Server = {
       }
     },
 
+    WHOWAS: function(user, nicknames, count, server) {
+      // TODO: Server
+      var found = false;
+      nicknames.split(',').forEach(function(nick) {
+        var matches = Server.history.find(nick);
+        if (count) matches = matches.slice(0, count);
+        matches.forEach(function(item) {
+          found = true;
+          user.send(irc.host, irc.reply.whoWasUser, user.nick, item.nick, item.username, item.host, '*', ':' + item.realname);
+          user.send(irc.host, irc.reply.whoIsServer, user.nick, item.nick, item.server, ':' + item.time);
+        });
+      });
+
+      if (found) {
+        user.send(irc.host, irc.reply.endWhoWas, user.nick, nicknames, ':End of WHOWAS');
+      } else {
+        user.send(irc.host, irc.errors.wasNoSuchNick, user.nick, nicknames, ':There was no such nickname');
+      }
+    },
+
     QUIT: function(user, message) {
       user.quit(message);
+      this.history.add(user);
       delete user;
     }
   },
@@ -852,6 +893,7 @@ function User(stream) {
   this.stream = stream;
   this._modes = [];
   this.channelModes = {};
+  this.server = '';
   this.created = new Date() / 1000;
   this.updated = new Date();
   this.__defineGetter__('mask', function() {
@@ -953,6 +995,7 @@ User.prototype = {
     if (this.registered === false
         && this.nick
         && this.username) {
+      this.server = Server.name;
       this.send(irc.host, irc.reply.welcome, this.nick, 'Welcome to the ' + config.network + ' IRC network', this.mask);
       this.send(irc.host, irc.reply.yourHost, this.nick, 'Your host is', config.hostname, 'running version', Server.version);
       this.send(irc.host, irc.reply.created, this.nick, 'This server was created on', Server.created);

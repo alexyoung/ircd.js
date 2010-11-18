@@ -14,6 +14,7 @@ h3. News
 
 Twitter: "@alex_young":http://twitter.com/alex_young.
 
+* [2010-11-18] Added VERSION, TIME, WHOWAS
 * [2010-11-16] Added +i and INVITE
 * [2010-11-14] Added +k (channel key)
 * [2010-11-12] Added +l (user limit)
@@ -36,6 +37,8 @@ Done:
 * NAMES
 * LIST
 * INVITE
+* WHOWAS
+* VERSION
 * Connection garbage like MOTD
 * Basic data validation
 * Simple JSON config file
@@ -43,8 +46,7 @@ Done:
 
 Planned:
 
-* More modes
-* More validation (channel name)
+* More basic commands
 * More tests (I only wrote basic tests to get started)
 * Log files and logging options
 
@@ -52,6 +54,7 @@ After the event horizon:
 
 * Passwords
 * Server to server communication
+* Stats command
 
 h3. License (GPL)
 
