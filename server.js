@@ -164,12 +164,18 @@ Server = {
       user.send('PING', hostname);
     },
 
-    VERSION: function(user) {
+    VERSION: function(user, server) {
+      // TODO: server
       user.send(irc.host,
                 irc.reply.version,
                 user.nick,
                 Server.version + '.' + (Server.debug ? 'debug' : ''),
                 config.hostname, ':' + Server.name);
+    },
+
+    TIME: function(user, server) {
+      // TODO: server
+      user.send(irc.host, irc.reply.time, user.nick, config.hostname, ':' + (new Date()));
     },
 
     NICK: function(user, nick) {
