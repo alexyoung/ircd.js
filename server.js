@@ -38,9 +38,10 @@ function log(m) {
 }
 
 Server = {
-  name: 'IRCN',
+  name: 'ircd.js',
   version: '0.1',
   created: '2010-10-20',
+  debug: false,
   showLog: true,
 
   config: {
@@ -161,6 +162,14 @@ Server = {
     // TODO: Does this come from other servers in the network?
     PONG: function(user, hostname) {
       user.send('PING', hostname);
+    },
+
+    VERSION: function(user) {
+      user.send(irc.host,
+                irc.reply.version,
+                user.nick,
+                Server.version + '.' + (Server.debug ? 'debug' : ''),
+                config.hostname, ':' + Server.name);
     },
 
     NICK: function(user, nick) {
