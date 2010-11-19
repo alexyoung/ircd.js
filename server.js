@@ -205,7 +205,9 @@ Server = {
         return user.send(irc.host, irc.errors.noNickGiven, ':No nickname given');
       } else if (nick === user.nick) {
         return;
-      } else if (nick.length > 9 || nick.match(irc.validations.invalidNick)) {
+      } else if (nick.length > config.nickLen) {
+        return user.send(irc.host, irc.errors.badNick, (user.nick || ''), nick, ':Nick too long, max length = ' + config.nickLen);
+      } else if (nick.match(irc.validations.invalidNick)) {
         return user.send(irc.host, irc.errors.badNick, (user.nick || ''), nick, ':Erroneus nickname');
       } else if (this.valueExists(nick, this.users.registered, 'nick')) {
         return user.send(irc.host, irc.errors.nameInUse, '*', nick, ':is already in use');
@@ -532,14 +534,26 @@ Server = {
     if (Server.commands[message.command]) {
       message.args.unshift(user);
       return Server.commands[message.command].apply(this, message.args);
+    } else {
+        user.send(irc.host, irc.errors.noSuchCommand, user.nick, ':Unknown command');
     }
-    // TODO: invalid command or message?
   },
 
   motd: function(user) {
     user.send(irc.host, irc.reply.motdStart, user.nick, ':- Message of the Day -');
     user.send(irc.host, irc.reply.motd, user.nick, ':-');
     user.send(irc.host, irc.reply.motdEnd, user.nick, ':End of /MOTD command.');
+  },
+
+  isupport: function(user) {
+    // 005, ISUPPORT
+    // Tells the client where this server may differ from the RFC.
+    // <http://www.irc.org/tech_docs/005.html>
+    var isupport = [];
+    if(config.nickLen != 9)
+        isupport.push('NICKLEN=' + parseInt(config.nickLen));
+    if(isupport.length)
+        user.send(irc.host, irc.reply.ISupport, user.nick, isupport.join(' ') + ' :are supported by this server');
   }
 };
 
@@ -1000,6 +1014,7 @@ User.prototype = {
       this.send(irc.host, irc.reply.yourHost, this.nick, 'Your host is', config.hostname, 'running version', Server.version);
       this.send(irc.host, irc.reply.created, this.nick, 'This server was created on', Server.created);
       this.send(irc.host, irc.reply.myInfo, this.nick, Server.name, Server.version);
+      Server.isupport(this);
       Server.motd(this);
       this.registered = true;
     }
