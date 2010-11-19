@@ -14,6 +14,7 @@ h3. News
 
 Twitter: "@alex_young":http://twitter.com/alex_young.
 
+* [2010-11-19] Added AWAY
 * [2010-11-18] Added VERSION, TIME, WHOWAS
 * [2010-11-16] Added +i and INVITE
 * [2010-11-14] Added +k (channel key)

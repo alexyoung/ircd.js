@@ -33,7 +33,7 @@ var net = require('net'),
 // TODO: Proper logging
 function log(m) {
   if (Server.showLog) {
-    console.log(m);
+    console.log.apply(this, Array.prototype.slice.call(arguments));
   }
 }
 
@@ -184,6 +184,18 @@ Server = {
       user.send('PING', hostname);
     },
 
+    AWAY: function(user, message) {
+      if (user.isAway && (!message || message.length === 0)) {
+        user.isAway = false;
+        user.awayMessage = null;
+        user.send(irc.host, irc.reply.unaway, user.nick, ':You are no longer marked as being away');
+      } else {
+        user.isAway = true;
+        user.awayMessage = message;
+        user.send(irc.host, irc.reply.nowAway, user.nick, ':You have been marked as being away');
+      }
+    },
+
     VERSION: function(user, server) {
       // TODO: server
       user.send(irc.host,
@@ -327,7 +339,6 @@ Server = {
     MODE: function(user, target, modes, arg) {
       // TODO: This should work with multiple parameters, like the definition:
       // <channel> {[+|-]|o|p|s|i|t|n|b|v} [<limit>] [<user>] [<ban mask>]
-
       // o - give/take channel operator privileges                   [done]
       // p - private channel flag                                    [done]
       // s - secret channel flag;                                    [done] - what's the difference?
@@ -339,6 +350,15 @@ Server = {
       // b - set a ban mask to keep users out;                       [done]
       // v - give/take the ability to speak on a moderated channel;  [done]
       // k - set a channel key (password).                           [done]
+
+      // User modes
+      // a - user is flagged as away;
+      // i - marks a users as invisible;
+      // w - user receives wallops;
+      // r - restricted user connection;
+      // o - operator flag;
+      // O - local operator flag;
+      // s - marks a user for receipt of server notices.
 
       if (Server.channelTarget(target)) {
         var channel = this.channels.find(target);
@@ -448,6 +468,9 @@ Server = {
                   target.username, target.hostname, '*', ':' + target.realname);
         user.send(irc.host, irc.reply.whoIsChannels, user.nick, target.nick, ':' + channels);
         user.send(irc.host, irc.reply.whoIsServer, user.nick, target.nick, config.hostname, ':' + config.serverDescription);
+        if (target.isAway) {
+          user.send(irc.host, irc.reply.away, user.nick, target.nick, ':' + target.awayMessage);
+        }
         user.send(irc.host, irc.reply.whoIsIdle, user.nick, target.nick, target.idle, user.created, ':seconds idle, signon time');
         user.send(irc.host, irc.reply.endOfWhoIs, user.nick, target.nick, ':End of /WHOIS list.');
       } else if (!nickmask || nickmask.length === 0) {
@@ -896,6 +919,9 @@ function User(stream) {
   this.server = '';
   this.created = new Date() / 1000;
   this.updated = new Date();
+  this.isAway = false;
+  this.awayMessage = null;
+
   this.__defineGetter__('mask', function() {
     return ':' + this.nick + '!' + this.username + '@' + this.hostname;
   });
@@ -1008,7 +1034,11 @@ User.prototype = {
   message: function(nick, message) {
     var user = Server.users.find(nick);
     this.updated = new Date();
+
     if (user) {
+      if (user.isAway) {
+        this.send(irc.host, irc.reply.away, this.nick, user.nick, ':' + user.awayMessage);          
+      }
       user.send(this.mask, 'PRIVMSG', user.nick, ':' + message);
     } else {
       this.send(irc.host, irc.errors.noSuchNick, this.nick, nick, ':No such nick/channel');
@@ -1031,33 +1061,37 @@ process.on('SIGHUP', function () {
 });
 
 tcpServer = net.createServer(function(stream) {
-  var carry = carrier.carry(stream),
-      user = new User(stream);
+  try {
+    var carry = carrier.carry(stream),
+        user = new User(stream);
 
-  stream.on('end', function() {
-    user.channels.forEach(function(channel) {
-      channel.users.forEach(function(channelUser) {
-        if (channelUser !== user) {
-          channelUser.send(user.mask, 'QUIT', user.quitMessage);
-        }
+    stream.on('end', function() {
+      user.channels.forEach(function(channel) {
+        channel.users.forEach(function(channelUser) {
+          if (channelUser !== user) {
+            channelUser.send(user.mask, 'QUIT', user.quitMessage);
+          }
+        });
+
+        delete channel.users[channel.users.indexOf(user)];
       });
 
-      delete channel.users[channel.users.indexOf(user)];
+      Server.users.remove(user);
+      user = null;
     });
 
-    Server.users.remove(user);
-    user = null;
-  });
+    stream.on('error', function(error) {
+      log('*** ERROR: ' + error);
+    });
 
-  stream.on('error', function(error) {
-    log('*** ERROR: ' + error);
-  });
-
-  carry.on('line',  function(line) {
-    line = line.slice(0, 512);
-    log('C: [' + user.nick + '] ' + line);
-    Server.respond(line, user);
-  });
+    carry.on('line',  function(line) {
+      line = line.slice(0, 512);
+      log('C: [' + user.nick + '] ' + line);
+      Server.respond(line, user);
+    });
+  } catch (exception) {
+    log('Fatal error: ', exception);
+  }
 });
 
 tcpServer.listen(6667);
