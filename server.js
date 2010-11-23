@@ -26,6 +26,7 @@ var net = require('net'),
     fs = require('fs'),
     irc = require('./protocol'),
     path = require('path'),
+    sha1 = require('./hash').sha1,
     tcpServer,
     Server,
     config;
@@ -352,8 +353,8 @@ Server = {
       // k - set a channel key (password).                           [done]
 
       // User modes
-      // a - user is flagged as away;
-      // i - marks a users as invisible;
+      // a - user is flagged as away;                                [done]
+      // i - marks a users as invisible;                             [done]
       // w - user receives wallops;
       // r - restricted user connection;
       // o - operator flag;
@@ -537,6 +538,24 @@ Server = {
         user.send(irc.host, irc.reply.endWhoWas, user.nick, nicknames, ':End of WHOWAS');
       } else {
         user.send(irc.host, irc.errors.wasNoSuchNick, user.nick, nicknames, ':There was no such nickname');
+      }
+    },
+
+    // TODO: Local ops
+    OPER: function(user, name, password) {
+      if (!name || !password) {
+        user.send(irc.host, irc.errors.wasNoSuchNick, user.nick, ':OPER requires a nick and password');
+      } else {
+        var userConfig;
+        for (var nick in config.opers) {
+          // TODO: ERR_NOOPERHOST (noOperHost)
+          if (sha1(password) === config.opers[nick].password) {
+            user.send(irc.host, irc.reply.youAreOper, user.nick, ':You are now an IRC operator');
+            user.oper();
+          } else {
+            user.send(irc.host, irc.errors.passwordWrong, user.nick, ':Password incorrect');
+          }
+        }
       }
     },
 
@@ -1060,6 +1079,14 @@ User.prototype = {
       this.channelModes[channel] = this.channelModes[channel].replace(/o/, '');
   },
 
+  oper: function() {
+    this.addMode.o.apply(this);
+  },
+
+  deoper: function() {
+    this.removeMode.o.apply(this);
+  },
+
   isVoiced: function(channel) {
     if (this.channelModes[channel])
       return this.channelModes[channel].match(/v/) || this.isOp(channel);
@@ -1130,6 +1157,13 @@ User.prototype = {
       } else {
         this.send(irc.host, irc.errors.usersDoNotMatch, this.nick, user.nick, ":Cannot change mode for other users");
       }
+    },
+
+    o: function() {
+      if (!this.modes.match(/o/)) {
+        this._modes.push('o');
+        this.send(this.mask, 'MODE', this.nick, '+o', this.nick);
+      }
     }
   },
 
@@ -1153,6 +1187,13 @@ User.prototype = {
         }
       } else {
         this.send(irc.host, irc.errors.usersDoNotMatch, this.nick, user.nick, ":Cannot change mode for other users");
+      }
+    },
+
+    o: function() {
+      if (this.modes.match(/o/)) {
+        delete user._modes[user._modes.indexOf('o')];
+        this.send(this.mask, 'MODE', this.nick, '-o', this.nick);
       }
     }
   },

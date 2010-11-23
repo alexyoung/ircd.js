@@ -14,6 +14,7 @@ h3. News
 
 Twitter: "@alex_young":http://twitter.com/alex_young.
 
+* [2010-11-23] Added OPER command that uses sha1 passwords in the config file
 * [2010-11-23] Added invisible user mode and user support for WHO command
 * [2010-11-19] Added AWAY
 * [2010-11-18] Added VERSION, TIME, WHOWAS
@@ -43,6 +44,7 @@ Done:
 * VERSION
 * AWAY
 * WHO
+* OPER
 * Connection garbage like MOTD
 * Basic data validation
 * Simple JSON config file
