@@ -380,6 +380,14 @@ Server = {
         }
       } else {
         // TODO: Server user modes
+        var targetUser = this.users.find(target);
+        if (targetUser) {
+          if (modes[0] === '+') {
+            targetUser.addModes(user, modes, arg);
+          } else if (modes[0] === '-') {
+            targetUser.removeModes(user, modes, arg);
+          }
+        }
       }
     },
 
@@ -428,25 +436,57 @@ Server = {
 
     WHO: function(user, target) {
       if (Server.channelTarget(target)) {
-        // TODO: Wildcards
-        // TODO: hidden user mode
+        // TODO: Channel wildcards
         var channel = this.channels.find(target);
         channel.users.forEach(function(channelUser) {
-          user.send(irc.host,
-                    irc.reply.who,
-                    user.nick,
-                    channel.name,
-                    channelUser.username,
-                    channelUser.hostname,
-                    config.hostname, // The IRC server rather than the network
-                    channelUser.channelNick(channel),
-                    'H', // TODO: H is here, G is gone, * is IRC operator, + is voice, @ is chanop
-                    ':0',
-                    channelUser.realname);
+          if (channelUser.isInvisible
+              && !user.isOper
+              && channel.users.indexOf(user) === -1) {
+              return;
+          } else {
+            user.send(irc.host,
+                      irc.reply.who,
+                      user.nick,
+                      channel.name,
+                      channelUser.username,
+                      channelUser.hostname,
+                      config.hostname, // The IRC server rather than the network
+                      channelUser.channelNick(channel),
+                      'H', // TODO: H is here, G is gone, * is IRC operator, + is voice, @ is chanop
+                      ':0',
+                      channelUser.realname);
+          }
         });
         user.send(irc.host, irc.reply.endWho, user.nick, channel.name, ':End of /WHO list.');
       } else {
-        // TODO: User
+        var matcher = Server.normalizeName(target).replace(/\?/g, '.');
+        this.users.registered.forEach(function(targetUser) {
+          try {
+            if (!targetUser.nick.match('^' + matcher + '$')) return;
+          } catch (e) {
+            return;
+          }
+
+          var sharedChannel = targetUser.sharedChannelWith(user);
+          if (targetUser.isInvisible
+              && !user.isOper
+              && !sharedChannel) {
+              return;
+          } else {
+            user.send(irc.host,
+                      irc.reply.who,
+                      user.nick,
+                      sharedChannel ? sharedChannel.name : '',
+                      targetUser.username,
+                      targetUser.hostname,
+                      config.hostname,
+                      targetUser.channelNick(channel),
+                      'H', // TODO
+                      ':0',
+                      targetUser.realname);
+          }
+        });
+        user.send(irc.host, irc.reply.endWho, user.nick, target, ':End of /WHO list.');
       }
     },
 
@@ -921,6 +961,8 @@ function User(stream) {
   this.updated = new Date();
   this.isAway = false;
   this.awayMessage = null;
+  this.serverOper = false;
+  this.localOper = false;
 
   this.__defineGetter__('mask', function() {
     return ':' + this.nick + '!' + this.username + '@' + this.hostname;
@@ -936,7 +978,15 @@ function User(stream) {
   });
 
   this.__defineGetter__('idle', function() {
-    return parseInt(((new Date()) - this.updated) / 1000, 10)
+    return parseInt(((new Date()) - this.updated) / 1000, 10);
+  });
+
+  this.__defineGetter__('isOper', function() {
+    return this.serverOper || this.localOper;
+  });
+
+  this.__defineGetter__('isInvisible', function() {
+    return this.modes.indexOf('i') !== -1;
   });
 
   this.hostLookup();
@@ -976,6 +1026,20 @@ User.prototype = {
     } else {
       return true;
     }
+  },
+
+  sharedChannelWith: function(targetUser) {
+    var user = this,
+        channels = targetUser.channels,
+        matchedChannel;
+    channels.some(function(channel) {
+      if (user.channels.indexOf(channel) !== -1) {
+        matchedChannel = channel;
+        return true;
+      }
+    });
+
+    return matchedChannel;
   },
 
   channelNick: function(channel) {
@@ -1042,6 +1106,54 @@ User.prototype = {
       user.send(this.mask, 'PRIVMSG', user.nick, ':' + message);
     } else {
       this.send(irc.host, irc.errors.noSuchNick, this.nick, nick, ':No such nick/channel');
+    }
+  },
+
+  addModes: function(user, modes, arg) {
+    var thisUser = this;
+    modes.slice(1).split('').forEach(function(mode) {
+      if (thisUser.addMode[mode])
+        thisUser.addMode[mode].apply(thisUser, [user, arg]);
+    });
+  },
+
+  addMode: {
+    i: function(user, arg) {
+      if (this.isOper || this === user) {
+        if (!user.modes.match(/i/)) {
+          user._modes.push('i');
+          user.send(user.mask, 'MODE', this.nick, '+i', user.nick);
+          if (this !== user) {
+            this.send(this.mask, 'MODE', this.nick, '+i', user.nick);
+          }
+        }
+      } else {
+        this.send(irc.host, irc.errors.usersDoNotMatch, this.nick, user.nick, ":Cannot change mode for other users");
+      }
+    }
+  },
+
+  removeModes: function(user, modes, arg) {
+    var thisUser = this;
+    modes.slice(1).split('').forEach(function(mode) {
+      if (thisUser.removeMode[mode])
+        thisUser.removeMode[mode].apply(thisUser, [user, arg]);
+    });
+  },
+
+  removeMode: {
+    i: function(user, arg) {
+      if (this.isOper || this === user) {
+        if (user.modes.match(/i/)) {
+          delete user._modes[user._modes.indexOf('i')];
+          user.send(user.mask, 'MODE', this.nick, '-i', user.nick);
+          if (this !== user) {
+            this.send(this.mask, 'MODE', this.nick, '-i', user.nick);
+          }
+        }
+      } else {
+        this.send(irc.host, irc.errors.usersDoNotMatch, this.nick, user.nick, ":Cannot change mode for other users");
+      }
     }
   },
 
