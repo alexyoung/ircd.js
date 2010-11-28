@@ -95,6 +95,20 @@ Server = {
       });
     },
 
+    expandMask: function(mask) {
+      return mask.replace(/\./g, '\\.').
+                  replace(/\*/g, '.*');
+    },
+
+    findWithMask: function(channelMask) {
+      channelMask = this.expandMask(Server.normalizeName(channelMask));
+      for (var channelName in this.registered) {
+        if (channelMask.match(channelName)) {
+          return this.registered[channelName];
+        }
+      }
+    },
+
     find: function(channelName) {
       return this.registered[Server.normalizeName(channelName)];
     },
@@ -257,6 +271,43 @@ Server = {
         partMessage = partMessage ? ' :' + partMessage : '';
         channel.send(user.mask, 'PART', channelName + partMessage);
         channel.part(user);
+      }
+    },
+
+    KICK: function(user, channels, users, kickMessage) {
+      var channelMasks = channels.split(','),
+          userNames = users.split(',');
+
+      kickMessage = kickMessage ? ':' + kickMessage : ':' + user.nick;
+
+      // ERR_BADCHANMASK
+
+      if (userNames.length !== channelMasks.length) {
+        user.send(irc.host, irc.errors.needMoreParams, user.nick, ':Need more parameters');
+      } else {
+        channelMasks.forEach(function(channelMask, i) {
+          var channel = Server.channels.findWithMask(channelMask),
+              userName = userNames[i],
+              targetUser;
+
+          if (!channel) {
+            user.send(irc.host, irc.errors.noSuchChannel, ':No such channel');
+            return;
+          }
+
+          targetUser = channel.findUserNamed(userName);
+
+          if (!channel.findUserNamed(user.nick)) {
+            user.send(irc.host, irc.errors.notOnChannel, user.nick, channel.name, ':Not on channel');
+          } else if (!targetUser) {
+            user.send(irc.host, irc.errors.userNotInChannel, userName, channel.name, ':User not in channel');
+          } else if (!user.isOp(channel)) {
+            user.send(irc.host, irc.errors.channelOpsReq, user.nick, channel.name, ":You're not channel operator");
+          } else {
+            channel.send(user.mask, 'KICK', channel.name, targetUser.nick, kickMessage);
+            channel.part(targetUser);
+          }
+        });
       }
     },
 
