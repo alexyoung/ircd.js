@@ -14,6 +14,7 @@ h3. News
 
 Twitter: "@alex_young":http://twitter.com/alex_young.
 
+* [2010-12-01] Split code into channel.js, user.js, server.js
 * [2010-11-28] Added KICK
 * [2010-11-23] Added OPER command that uses sha1 passwords in the config file
 * [2010-11-23] Added invisible user mode and user support for WHO command
