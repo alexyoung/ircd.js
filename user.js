@@ -119,7 +119,10 @@ User.prototype = {
   },
 
   oper: function() {
-    this.addMode.o.apply(this);
+    if (!this.modes.match(/o/)) {
+      this._modes.push('o');
+      this.send(this.mask, 'MODE', this.nick, '+o', this.nick);
+    }
   },
 
   deoper: function() {
@@ -158,6 +161,7 @@ User.prototype = {
       this.send(irc.host, irc.reply.myInfo, this.nick, Server.name, Server.version);
       Server.motd(this);
       this.registered = true;
+      this.addMode.w.apply(this);
     }
   },
 
@@ -199,9 +203,13 @@ User.prototype = {
     },
 
     o: function() {
-      if (!this.modes.match(/o/)) {
-        this._modes.push('o');
-        this.send(this.mask, 'MODE', this.nick, '+o', this.nick);
+      // Can only be issued by OPER
+    },
+
+    w: function() {
+      if (!this.modes.match(/w/)) {
+        this._modes.push('w');
+        this.send(this.mask, 'MODE', this.nick, '+w', this.nick);
       }
     }
   },
@@ -233,6 +241,13 @@ User.prototype = {
       if (this.modes.match(/o/)) {
         delete user._modes[user._modes.indexOf('o')];
         this.send(this.mask, 'MODE', this.nick, '-o', this.nick);
+      }
+    },
+
+    w: function() {
+      if (this.modes.match(/w/)) {
+        delete user._modes[user._modes.indexOf('w')];
+        this.send(this.mask, 'MODE', this.nick, '-w', this.nick);
       }
     }
   },

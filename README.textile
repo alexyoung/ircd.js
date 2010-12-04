@@ -14,6 +14,7 @@ h3. News
 
 Twitter: "@alex_young":http://twitter.com/alex_young.
 
+* [2010-12-04] Added user mode w and WALLOPS
 * [2010-12-01] Split code into channel.js, user.js, server.js
 * [2010-11-28] Added KICK
 * [2010-11-23] Added OPER command that uses sha1 passwords in the config file
@@ -48,17 +49,19 @@ Done:
 * WHO
 * OPER
 * KICK
+* WALLOP
 * Connection garbage like MOTD
 * Basic data validation
 * Simple JSON config file
 * Channel modes: o, p, s, t, n, m, i, l, b, v, k
-* User modes: i
+* User modes: i, w, o
 
 Planned:
 
 * More basic commands
 * More tests (I only wrote basic tests to get started)
 * Log files and logging options
+* Local ops (+O)
 
 After the event horizon:
 

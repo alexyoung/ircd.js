@@ -187,14 +187,15 @@ Server = {
     }
   },
 
+  serverCommands: {
+    PONG: function(server, hostname) {
+      server.send('PING', hostname);
+    }
+  },
+
   commands: {
     PING: function(user, hostname) {
       user.send(irc.host, 'PONG', Server.config.hostname, irc.host);
-    },
-
-    // TODO: Does this come from other servers in the network?
-    PONG: function(user, hostname) {
-      user.send('PING', hostname);
     },
 
     AWAY: function(user, message) {
@@ -588,6 +589,19 @@ Server = {
       } else {
         user.send(irc.host, irc.errors.wasNoSuchNick, user.nick, nicknames, ':There was no such nickname');
       }
+    },
+
+    WALLOPS: function(user, text) {
+      if (!text || text.length === 0) {
+        user.send(irc.host, irc.errors.needMoreParams, user.nick, ':Need more parameters');
+        return;
+      }
+
+      this.users.registered.forEach(function(user) {
+        if (user.modes.indexOf('w') !== -1) {
+          user.send(irc.host, 'WALLOPS', ':OPERWALL - ' + text);
+        }
+      });
     },
 
     // TODO: Local ops
