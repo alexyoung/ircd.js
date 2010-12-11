@@ -1,8 +1,7 @@
-var irc = require('./protocol'),
-    Server;
+var irc = require('./protocol');
 
 function Channel(name, ircServer) {
-  Server = ircServer;
+  this.server = ircServer;
   this.name = name;
   this.users = [];
   this.topic = '';
@@ -68,9 +67,10 @@ function Channel(name, ircServer) {
 
 Channel.prototype = {
   onInviteList: function(user) {
-    var userNick = Server.normalizeName(user.nick);
+    var userNick = this.server.normalizeName(user.nick),
+        server = this.server;
     return this.inviteList.some(function(nick) {
-      return Server.normalizeName(nick) === userNick;
+      return server.normalizeName(nick) === userNick;
     });
   },
 
@@ -99,22 +99,23 @@ Channel.prototype = {
   },
 
   send: function() {
-    var message = arguments.length === 1 ? arguments[0] : Array.prototype.slice.call(arguments).join(' ');
+    var message = arguments.length === 1 ? arguments[0] : Array.prototype.slice.call(arguments).join(' '),
+        server = this.server;
 
     this.users.forEach(function(user) {
       try {
         user.send(message);
       } catch (exception) {
-        Server.log('Error writing to stream:');
-        Server.log(exception);
+        server.log('Error writing to stream:');
+        server.log(exception);
       }
     });
   },
 
   findUserNamed: function(nick) {
-    nick = Server.normalizeName(nick);
+    nick = this.server.normalizeName(nick);
     for (var i = 0; i < this.users.length; i++) {
-      if (Server.normalizeName(this.users[i].nick) === nick) {
+      if (this.server.normalizeName(this.users[i].nick) === nick) {
         return this.users[i];
       }
     }
@@ -140,7 +141,7 @@ Channel.prototype = {
         return true;
       }
     } else {
-      user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
+      user.send(this.server.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
     }
     return false;
   },
@@ -153,7 +154,7 @@ Channel.prototype = {
         return true;
       }
     } else {
-      user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
+      user.send(this.server.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
     }
     return false;
   },
@@ -167,7 +168,7 @@ Channel.prototype = {
           this.send(user.mask, 'MODE', this.name, '+o', targetUser.nick);
         }
       } else {
-        user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
+        user.send(this.server.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
       }
     },
 
@@ -179,7 +180,7 @@ Channel.prototype = {
           this.send(user.mask, 'MODE', this.name, '+v', targetUser.nick);
         }
       } else {
-        user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
+        user.send(this.server.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
       }
     },
 
@@ -190,17 +191,17 @@ Channel.prototype = {
     k: function(user, arg) {
       if (user.isOp(this)) {
         if (this.key) {
-          user.send(irc.host, irc.errors.keySet, user.nick, this.name, ":Channel key already set");
+          user.send(this.server.host, irc.errors.keySet, user.nick, this.name, ":Channel key already set");
         } else if (this.isValidKey(arg)) {
           this.key = arg;
           this.modes += 'k';
           this.send(user.mask, 'MODE', this.name, '+k ' + arg);
         } else {
           // TODO: I thought 475 was just returned when joining the channel
-          user.send(irc.host, irc.errors.badChannelKey, user.nick, this.name, ":Invalid channel key");
+          user.send(this.server.host, irc.errors.badChannelKey, user.nick, this.name, ":Invalid channel key");
         }
       } else {
-        user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
+        user.send(this.server.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
       }
     },
 
@@ -213,7 +214,7 @@ Channel.prototype = {
           this.send(user.mask, 'MODE', this.name, '+l ' + arg, this.name);
         }
       } else {
-        user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
+        user.send(this.server.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
       }
     },
 
@@ -245,7 +246,7 @@ Channel.prototype = {
           this.send(user.mask, 'MODE', this.name, '+b', ':' + arg);
         }
       } else {
-        user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
+        user.send(this.server.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
       }
     }
   },
@@ -267,7 +268,7 @@ Channel.prototype = {
           this.send(user.mask, 'MODE', this.name, '-o', targetUser.nick);
         }
       } else {
-        user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
+        user.send(this.server.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
       }
     },
 
@@ -279,7 +280,7 @@ Channel.prototype = {
           this.send(user.mask, 'MODE', this.name, '-v', targetUser.nick);
         }
       } else {
-        user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
+        user.send(this.server.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
       }
     },
 
@@ -328,7 +329,7 @@ Channel.prototype = {
           this.send(user.mask, 'MODE', this.name, '-b', ':' + arg);
         }
       } else {
-        user.send(irc.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
+        user.send(this.server.host, irc.errors.channelOpsReq, user.nick, this.name, ":You're not channel operator");
       }
     }
   },

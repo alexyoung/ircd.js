@@ -14,6 +14,7 @@ h3. News
 
 Twitter: "@alex_young":http://twitter.com/alex_young.
 
+* [2010-12-11] First steps towards linked servers, major restructuring
 * [2010-12-04] Added user mode w and WALLOPS
 * [2010-12-01] Split code into channel.js, user.js, server.js
 * [2010-11-28] Added KICK
@@ -44,12 +45,14 @@ Done:
 * LIST
 * INVITE
 * WHOWAS
+* TIME
 * VERSION
 * AWAY
 * WHO
 * OPER
 * KICK
 * WALLOP
+* CONNECT
 * Connection garbage like MOTD
 * Basic data validation
 * Simple JSON config file
@@ -58,16 +61,16 @@ Done:
 
 Planned:
 
-* More basic commands
+* Server-to-server NICK messages when nicks are changed or new clients join
+* Server-to-server messages for JOIN, NJOIN, MODE, PRIVSG and NOTICE
+* SQUIT and QUIT for links
+* Server to server communication
+* More basic commands: NOTICE, MOTD, LINKS, TRACE, ADMIN, INFO
 * More tests (I only wrote basic tests to get started)
 * Log files and logging options
 * Local ops (+O)
-
-After the event horizon:
-
-* Passwords
-* Server to server communication
 * Stats command
+* Services
 
 h3. License (GPL)
 

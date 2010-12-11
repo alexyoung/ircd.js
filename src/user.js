@@ -2,25 +2,36 @@ var dns = require('dns'),
     irc = require('./protocol');
 
 function User(stream, ircServer) {
-  Server = ircServer;
+  this.server = ircServer;
+  this.config = ircServer.config;
   this.nick = null;
   this.username = null;
   this.realname = null;
   this.channels = [];
   this.quitMessage = 'Connection lost';
-  this.remoteAddress = stream.remoteAddress;
-  this.hostname = stream.remoteAddress;
+
+  if (stream) {
+    this.stream = stream;
+    this.remoteAddress = stream.remoteAddress;
+    this.hostname = stream.remoteAddress;
+  }
+
   this.registered = false;
-  this.stream = stream;
   this._modes = [];
   this.channelModes = {};
-  this.server = '';
+  this.serverName = '';
   this.created = new Date() / 1000;
   this.updated = new Date();
   this.isAway = false;
   this.awayMessage = null;
   this.serverOper = false;
   this.localOper = false;
+  this.hopCount = 0;
+  this.servertoken = null;
+
+  this.__defineGetter__('id', function() {
+    return this.nick;
+  });
 
   this.__defineGetter__('mask', function() {
     return ':' + this.nick + '!' + this.username + '@' + this.hostname;
@@ -32,6 +43,7 @@ function User(stream, ircServer) {
   });
 
   this.__defineSetter__('modes', function(modes) {
+    modes = modes.replace(/^\+/, '');
     this._modes = modes.split('');
   });
 
@@ -40,7 +52,7 @@ function User(stream, ircServer) {
   });
 
   this.__defineGetter__('isOper', function() {
-    return this.serverOper || this.localOper;
+    return this.modes.indexOf('o') !== -1;
   });
 
   this.__defineGetter__('isInvisible', function() {
@@ -52,15 +64,17 @@ function User(stream, ircServer) {
 
 User.prototype = {
   send: function() {
+    if (!this.stream) return;
+
     var message = arguments.length === 1 ?
         arguments[0]
       : Array.prototype.slice.call(arguments).join(' ');
 
-    Server.log('S: [' + this.nick + '] ' + message);
+    this.server.log('S: [' + this.nick + '] ' + message);
     try {
       this.stream.write(message + '\r\n');
     } catch (exception) {
-      Server.log(exception);
+      this.server.log(exception);
     }
   },
 
@@ -144,6 +158,7 @@ User.prototype = {
   },
 
   hostLookup: function() {
+    if (!this.remoteAddress) return;
     user = this;
     dns.reverse(this.remoteAddress, function(err, addresses) {
       user.hostname = addresses && addresses.length > 0 ? addresses[0] : user.remoteAddress;
@@ -154,28 +169,28 @@ User.prototype = {
     if (this.registered === false
         && this.nick
         && this.username) {
-      this.server = Server.name;
-      this.send(irc.host, irc.reply.welcome, this.nick, 'Welcome to the ' + Server.config.network + ' IRC network', this.mask);
-      this.send(irc.host, irc.reply.yourHost, this.nick, 'Your host is', Server.config.hostname, 'running version', Server.version);
-      this.send(irc.host, irc.reply.created, this.nick, 'This server was created on', Server.created);
-      this.send(irc.host, irc.reply.myInfo, this.nick, Server.name, Server.version);
-      Server.motd(this);
+      this.serverName = this.config.name;
+      this.send(this.server.host, irc.reply.welcome, this.nick, 'Welcome to the ' + this.config.network + ' IRC network', this.mask);
+      this.send(this.server.host, irc.reply.yourHost, this.nick, 'Your host is', this.config.hostname, 'running version', this.server.version);
+      this.send(this.server.host, irc.reply.created, this.nick, 'This server was created on', this.server.created);
+      this.send(this.server.host, irc.reply.myInfo, this.nick, this.config.name, this.server.version);
+      this.server.motd(this);
       this.registered = true;
       this.addMode.w.apply(this);
     }
   },
 
   message: function(nick, message) {
-    var user = Server.users.find(nick);
+    var user = this.server.users.find(nick);
     this.updated = new Date();
 
     if (user) {
       if (user.isAway) {
-        this.send(irc.host, irc.reply.away, this.nick, user.nick, ':' + user.awayMessage);          
+        this.send(this.server.host, irc.reply.away, this.nick, user.nick, ':' + user.awayMessage);          
       }
       user.send(this.mask, 'PRIVMSG', user.nick, ':' + message);
     } else {
-      this.send(irc.host, irc.errors.noSuchNick, this.nick, nick, ':No such nick/channel');
+      this.send(this.server.host, irc.errors.noSuchNick, this.nick, nick, ':No such nick/channel');
     }
   },
 
@@ -198,7 +213,7 @@ User.prototype = {
           }
         }
       } else {
-        this.send(irc.host, irc.errors.usersDoNotMatch, this.nick, user.nick, ":Cannot change mode for other users");
+        this.send(this.server.host, irc.errors.usersDoNotMatch, this.nick, user.nick, ":Cannot change mode for other users");
       }
     },
 
@@ -233,7 +248,7 @@ User.prototype = {
           }
         }
       } else {
-        this.send(irc.host, irc.errors.usersDoNotMatch, this.nick, user.nick, ":Cannot change mode for other users");
+        this.send(this.server.host, irc.errors.usersDoNotMatch, this.nick, user.nick, ":Cannot change mode for other users");
       }
     },
 

@@ -3,12 +3,9 @@ var port = 6667,
     path = require('path'),
     ircd = require(path.join(__dirname, '..', 'server')),
     server = ircd.ircServer,
-    tcp = ircd.tcpServer,
     irc = require('irc'),
     events = require('events'),
     testEmitter = new events.EventEmitter();
-
-server.showLog = true;
 
 function run(tests) {
   var queue = [],
@@ -150,7 +147,7 @@ run({
 
 
   'teardown': function() {
-    tcp.close();
+    server.close();
   }
 });
 
