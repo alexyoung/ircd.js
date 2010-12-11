@@ -1,0 +1,20 @@
+{
+  "name": "ircd.js",
+  "description": "An IRCD for Node",
+  "version": "0.0.1",
+  "homepage": "https://github.com/alexyoung/ircd.js",
+  "author": "Alex R. Young (http://alexyoung.org)",
+  "directories": {
+    "lib": "./lib"
+  },
+  "engines": {
+    "node": ">= 0.2.0"
+  },
+  "dependencies": {
+    "carrier": ">= 0.0.3"
+  },
+  "bin": {
+    "ircdjs-pwgen": "bin/pwgen.js",
+    "ircdjs": "bin/ircd.js"
+  }
+}

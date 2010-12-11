@@ -14,6 +14,7 @@ h3. News
 
 Twitter: "@alex_young":http://twitter.com/alex_young.
 
+* [2010-12-11] Now installable from npm, server now checks for config in /etc/ircdjs/config.json
 * [2010-12-11] First steps towards linked servers, major restructuring
 * [2010-12-04] Added user mode w and WALLOPS
 * [2010-12-01] Split code into channel.js, user.js, server.js
@@ -71,6 +72,13 @@ Planned:
 * Local ops (+O)
 * Stats command
 * Services
+* Add command line arguments for changing configuration path
+
+h3. Documentation
+
+Install with <code>npm install ircdjs</code>.
+
+Set up configuration in <code>/etc/ircdjs/config.json</code>.
 
 h3. License (GPL)
 
