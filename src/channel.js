@@ -10,51 +10,53 @@ function Channel(name, ircServer) {
   this.userLimit = 0;
   this.key = null;
   this.inviteList = [];
+}
 
-  this.__defineGetter__('modes', function() {
+Channel.prototype = {
+  get modes() {
     return '+' + this._modes.join(''); 
-  });
+  },
 
-  this.__defineSetter__('modes', function(modes) {
+  set modes(modes) {
     this._modes = modes.split('');
-  });
+  },
 
-  this.__defineGetter__('memberCount', function() {
+  get memberCount() {
     return this.users.length;
-  });
+  },
 
-  this.__defineGetter__('isLimited', function() {
+  get isLimited() {
     return this._modes.indexOf('l') > -1;
-  });
+  },
 
-  this.__defineGetter__('isPublic', function() {
+  get isPublic() {
     return !this.isSecret && !this.isPrivate;
-  });
+  },
 
-  this.__defineGetter__('isSecret', function() {
+  get isSecret() {
     return this._modes.indexOf('s') > -1;
-  });
+  },
 
-  this.__defineGetter__('isPrivate', function() {
+  get isPrivate() {
     return this._modes.indexOf('p') > -1;
-  });
+  },
 
-  this.__defineGetter__('isModerated', function() {
+  get isModerated() {
     return this._modes.indexOf('m') > -1;
-  });
+  },
 
-  this.__defineGetter__('isInviteOnly', function() {
+  get isInviteOnly() {
     return this._modes.indexOf('i') > -1;
-  });
+  },
 
-  this.__defineGetter__('names', function() {
+  get names() {
     var channel = this;
     return this.users.map(function(user) {
       return user.channelNick(channel);
     }).join(' ');
-  });
+  },
 
-  this.__defineGetter__('type', function() {
+  get type() {
     if (this.isPrivate) {
       return '*';
     } else if (this.isSecret) {
@@ -62,10 +64,8 @@ function Channel(name, ircServer) {
     } else {
       return '=';
     }
-  });
-}
+  },
 
-Channel.prototype = {
   onInviteList: function(user) {
     var userNick = this.server.normalizeName(user.nick),
         server = this.server;

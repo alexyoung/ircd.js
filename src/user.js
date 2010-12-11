@@ -29,40 +29,39 @@ function User(stream, ircServer) {
   this.hopCount = 0;
   this.servertoken = null;
 
-  this.__defineGetter__('id', function() {
-    return this.nick;
-  });
-
-  this.__defineGetter__('mask', function() {
-    return ':' + this.nick + '!' + this.username + '@' + this.hostname;
-  });
-
-  // TODO setter for modes
-  this.__defineGetter__('modes', function() {
-    return '+' + this._modes.join(''); 
-  });
-
-  this.__defineSetter__('modes', function(modes) {
-    modes = modes.replace(/^\+/, '');
-    this._modes = modes.split('');
-  });
-
-  this.__defineGetter__('idle', function() {
-    return parseInt(((new Date()) - this.updated) / 1000, 10);
-  });
-
-  this.__defineGetter__('isOper', function() {
-    return this.modes.indexOf('o') !== -1;
-  });
-
-  this.__defineGetter__('isInvisible', function() {
-    return this.modes.indexOf('i') !== -1;
-  });
-
   this.hostLookup();
 }
 
 User.prototype = {
+  get id() {
+    return this.nick;
+  },
+
+  get mask() {
+    return ':' + this.nick + '!' + this.username + '@' + this.hostname;
+  },
+
+  get modes() {
+    return '+' + this._modes.join(''); 
+  },
+
+  set modes(modes) {
+    modes = modes.replace(/^\+/, '');
+    this._modes = modes.split('');
+  },
+
+  get idle() {
+    return parseInt(((new Date()) - this.updated) / 1000, 10);
+  },
+
+  get isOper() {
+    return this.modes.indexOf('o') !== -1;
+  },
+
+  get isInvisible() {
+    return this.modes.indexOf('i') !== -1;
+  },
+
   send: function() {
     if (!this.stream) return;
 

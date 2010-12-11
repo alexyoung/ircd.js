@@ -17,13 +17,13 @@ function RemoteServer(peer, serverName, options) {
 
   this.authenticated = false;
   this.gotServerInfo = false;
-
-  this.__defineGetter__('id', function() {
-    return this.name;
-  });
 }
 
 RemoteServer.prototype = {
+  get id() {
+    return this.name;
+  },
+
   send: function() {
     var message = arguments.length === 1 ?
         arguments[0]

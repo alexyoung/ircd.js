@@ -755,7 +755,7 @@ Server.prototype = {
   }
 };
 
-exports.ircServer = Server;
+exports.Server = Server;
 
 if (!module.parent) {
   var server = new Server();

@@ -1,6 +1,6 @@
 var assert = require('assert'),
     path = require('path'),
-    Server = require(path.join(__dirname, '..', 'src', 'server')).ircServer,
+    Server = require(path.join(__dirname, '..', 'src', 'server')).Server,
     events = require('events'),
     testEmitter = new events.EventEmitter(),
     server1 = new Server(),

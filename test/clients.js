@@ -1,11 +1,31 @@
 var port = 6667,
     assert = require('assert'),
     path = require('path'),
-    ircd = require(path.join(__dirname, '..', 'server')),
-    server = ircd.ircServer,
+    Server = require(path.join(__dirname, '..', 'src', 'server')).Server,
+    server = new Server(),
     irc = require('irc'),
     events = require('events'),
     testEmitter = new events.EventEmitter();
+
+server.config = { "network":  "ircn",
+  "hostname": "localhost",
+  "serverDescription": "A Node IRC daemon",
+  "serverName": "server1",
+  "port": 6667,
+  "linkPort": 7777,
+  "whoWasLimit": 10000,
+  "token": 1,
+  "opers": {
+    "alex": { "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8" }
+  },
+  "links": {
+    "server2": { "host": "127.0.0.1",
+                 "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
+                 "port": 7778,
+                 "token": 2 }
+  }
+};
+server.start();
 
 function run(tests) {
   var queue = [],
