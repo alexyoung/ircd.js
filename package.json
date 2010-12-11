@@ -1,5 +1,5 @@
 {
-  "name": "ircd.js",
+  "name": "ircdjs",
   "description": "An IRCD for Node",
   "version": "0.0.1",
   "homepage": "https://github.com/alexyoung/ircdjs",
