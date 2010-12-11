@@ -2,7 +2,7 @@
   "name": "ircd.js",
   "description": "An IRCD for Node",
   "version": "0.0.1",
-  "homepage": "https://github.com/alexyoung/ircd.js",
+  "homepage": "https://github.com/alexyoung/ircdjs",
   "author": "Alex R. Young (http://alexyoung.org)",
   "directories": {
     "lib": "./lib"
