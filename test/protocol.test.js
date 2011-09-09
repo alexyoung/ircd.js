@@ -1,9 +1,9 @@
 var path = require('path'),
-  assert = require('assert'),
-  protocol = require(path.join(__dirname, '..', 'lib', 'protocol')),
-  invalidNick = protocol.validations.invalidNick,
-  invalidChannel = protocol.validations.invalidChannel,
-  invalidChannelKey = protocol.validations.invalidChannelKey;
+    assert = require('assert'),
+    protocol = require(path.join(__dirname, '..', 'lib', 'protocol')),
+    invalidNick = protocol.validations.invalidNick,
+    invalidChannel = protocol.validations.invalidChannel,
+    invalidChannelKey = protocol.validations.invalidChannelKey;
 
 exports['nickname validation'] = function(test) {
   // Valid nicknames
@@ -65,9 +65,3 @@ exports['channelkey validation'] = function(test) {
   test.done();
 }
 
-if(!module.parent) {
-  assert.done = function() { };
-  for(key in exports) {
-    exports[key](assert);
-  }
-}

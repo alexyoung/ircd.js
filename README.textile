@@ -14,6 +14,7 @@ h3. News
 
 Twitter: "@alex_young":http://twitter.com/alex_young.
 
+* [2011-09-09] Fixed bug #9: WHO on nonexistent channel.  Improved unit tests
 * [2010-12-27] More work on server links (broadcasting of SERVER commands)
 * [2010-12-11] Now installable from npm, server now checks for config in /etc/ircdjs/config.json
 * [2010-12-11] First steps towards linked servers, major restructuring

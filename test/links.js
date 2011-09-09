@@ -10,98 +10,98 @@ var assert = require('assert'),
     server4 = new Server();
 
 server1.config = {
-  "network":  "ircn",
-  "hostname": "localhost",
-  "serverDescription": "A Node IRC daemon",
-  "serverName": "server1",
-  "port": 6667,
-  "linkPort": 7777,
-  "whoWasLimit": 10000,
-  "token": 1,
-  "opers": {
-    "alex": { "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8" },
-    "bob": { "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8" },
-    "alice": { "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8" }
+  'network':  'ircn',
+  'hostname': 'localhost',
+  'serverDescription': 'A Node IRC daemon',
+  'serverName': 'server1',
+  'port': 6667,
+  'linkPort': 7777,
+  'whoWasLimit': 10000,
+  'token': 1,
+  'opers': {
+    'alex': { 'password': '5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8' },
+    'bob': { 'password': '5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8' },
+    'alice': { 'password': '5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8' }
   },
-  "links": {
-    "server2": { "host": "127.0.0.1",
-                 "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
-                 "port": 7778,
-                 "token": 2 }
+  'links': {
+    'server2': { 'host': '127.0.0.1',
+                 'password': '5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8',
+                 'port': 7778,
+                 'token': 2 }
   }
 };
 
 server2.config = {
-  "network":  "ircn",
-  "hostname": "localhost",
-  "serverDescription": "Another Node IRC daemon",
-  "serverName": "server2",
-  "whoWasLimit": 10000,
-  "port": 8000,
-  "linkPort": 7778,
-  "token": 2,
-  "opers": {
-    "alex": { "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8" },
-    "bob": { "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8" },
-    "alice": { "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8" }
+  'network':  'ircn',
+  'hostname': 'localhost',
+  'serverDescription': 'Another Node IRC daemon',
+  'serverName': 'server2',
+  'whoWasLimit': 10000,
+  'port': 8000,
+  'linkPort': 7778,
+  'token': 2,
+  'opers': {
+    'alex': { 'password': '5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8' },
+    'bob': { 'password': '5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8' },
+    'alice': { 'password': '5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8' }
   },
-  "links": {
-    "server1": { "host": "127.0.0.1",
-                 "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
-                 "port": 7777,
-                 "token": 1 },
-    "server3": { "host": "127.0.0.1",
-                 "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
-                 "port": 7779,
-                 "token": 3 }
+  'links': {
+    'server1': { 'host': '127.0.0.1',
+                 'password': '5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8',
+                 'port': 7777,
+                 'token': 1 },
+    'server3': { 'host': '127.0.0.1',
+                 'password': '5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8',
+                 'port': 7779,
+                 'token': 3 }
   }
 };
 
 server3.config = {
-  "network":  "ircn",
-  "hostname": "localhost",
-  "serverDescription": "Yet another Node IRC daemon",
-  "serverName": "server3",
-  "whoWasLimit": 10000,
-  "port": 8001,
-  "linkPort": 7779,
-  "token": 3,
-  "opers": {
-    "alex": { "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8" },
-    "bob": { "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8" },
-    "alice": { "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8" }
+  'network':  'ircn',
+  'hostname': 'localhost',
+  'serverDescription': 'Yet another Node IRC daemon',
+  'serverName': 'server3',
+  'whoWasLimit': 10000,
+  'port': 8001,
+  'linkPort': 7779,
+  'token': 3,
+  'opers': {
+    'alex': { 'password': '5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8' },
+    'bob': { 'password': '5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8' },
+    'alice': { 'password': '5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8' }
   },
-  "links": {
-    "server2": { "host": "127.0.0.1",
-                 "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
-                 "port": 7778,
-                 "token": 2 },
-    "server4": { "host": "127.0.0.1",
-                 "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
-                 "port": 7770,
-                 "token": 4 }
+  'links': {
+    'server2': { 'host': '127.0.0.1',
+                 'password': '5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8',
+                 'port': 7778,
+                 'token': 2 },
+    'server4': { 'host': '127.0.0.1',
+                 'password': '5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8',
+                 'port': 7770,
+                 'token': 4 }
   }
 };
 
 server4.config = {
-  "network":  "ircn",
-  "hostname": "localhost",
-  "serverDescription": "Yet yet another Node IRC daemon",
-  "serverName": "server4",
-  "whoWasLimit": 10000,
-  "port": 8002,
-  "linkPort": 7770,
-  "token": 4,
-  "opers": {
-    "alex": { "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8" },
-    "bob": { "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8" },
-    "alice": { "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8" }
+  'network':  'ircn',
+  'hostname': 'localhost',
+  'serverDescription': 'Yet yet another Node IRC daemon',
+  'serverName': 'server4',
+  'whoWasLimit': 10000,
+  'port': 8002,
+  'linkPort': 7770,
+  'token': 4,
+  'opers': {
+    'alex': { 'password': '5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8' },
+    'bob': { 'password': '5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8' },
+    'alice': { 'password': '5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8' }
   },
-  "links": {
-    "server3": { "host": "127.0.0.1",
-                 "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
-                 "port": 7779,
-                 "token": 3 }
+  'links': {
+    'server3': { 'host': '127.0.0.1',
+                 'password': '5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8',
+                 'port': 7779,
+                 'token': 3 }
   }
 };
 
