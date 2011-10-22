@@ -14,6 +14,7 @@ h3. News
 
 Twitter: "@alex_young":http://twitter.com/alex_young.
 
+* [2011-10-22] Removed server link code (it was overcomplicating development too much, I'll come back to it later)
 * [2011-09-09] Fixed bug #9: WHO on nonexistent channel.  Improved unit tests
 * [2010-12-27] More work on server links (broadcasting of SERVER commands)
 * [2010-12-11] Now installable from npm, server now checks for config in /etc/ircdjs/config.json
@@ -64,12 +65,13 @@ Done:
 
 Planned:
 
+* Change sha1 operator passwords to bcrypt
+* Bring back server links
 * Server-to-server NICK messages when nicks are changed or new clients join
 * Server-to-server messages for JOIN, NJOIN, MODE, PRIVSG and NOTICE
 * SQUIT and QUIT for links
 * Server to server communication
 * More basic commands: NOTICE, MOTD, LINKS, TRACE, ADMIN, INFO
-* More tests (I only wrote basic tests to get started)
 * Log files and logging options
 * Local ops (+O)
 * Stats command
