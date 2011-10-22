@@ -66,6 +66,7 @@ Done:
 Planned:
 
 * Change sha1 operator passwords to bcrypt
+* Services
 * Bring back server links
 * Server-to-server NICK messages when nicks are changed or new clients join
 * Server-to-server messages for JOIN, NJOIN, MODE, PRIVSG and NOTICE
@@ -75,7 +76,6 @@ Planned:
 * Log files and logging options
 * Local ops (+O)
 * Stats command
-* Services
 * Add command line arguments for changing configuration path
 
 h3. Documentation
