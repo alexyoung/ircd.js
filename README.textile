@@ -14,6 +14,7 @@ h3. News
 
 Twitter: "@alex_young":http://twitter.com/alex_young.
 
+* [2011-10-22] Now based around EventEmitter, changed sha1 passwords to bcrypt
 * [2011-10-22] Removed server link code (it was overcomplicating development too much, I'll come back to it later)
 * [2011-09-09] Fixed bug #9: WHO on nonexistent channel.  Improved unit tests
 * [2010-12-27] More work on server links (broadcasting of SERVER commands)
@@ -65,7 +66,6 @@ Done:
 
 Planned:
 
-* Change sha1 operator passwords to bcrypt
 * Services
 * Bring back server links
 * Server-to-server NICK messages when nicks are changed or new clients join

@@ -1,3 +1,9 @@
 #!/usr/bin/env node
-var sha1 = require('../lib/hash').sha1;
-console.log(sha1(process.argv[2]));
+var ircd = require(__dirname + '/../lib/ircd');
+ircd.hash(process.argv[2], function(err, hash) {
+  if (err) {
+    throw(err);
+  } else {
+    console.log(hash);
+  }
+});

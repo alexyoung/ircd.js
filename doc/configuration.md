@@ -24,7 +24,7 @@ This is what a configuration file looks like:
 * `serverName`: The name of the server
 * `port`: The port the server should listen on
 * `whoWasLimit`: The number of `WHOWAS` records to store in memory
-* `opers`: A list of operators with sha1 passwords
+* `opers`: A list of operators with bcrypted passwords (the `pwgen.js` script can encrypt passwords for you)
 * `links`: This is for other server links and can be ignored for now
 
 ## Configuration File Locations
