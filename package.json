@@ -1,7 +1,7 @@
 {
   "name": "ircdjs",
   "description": "An IRCD for Node",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "homepage": "https://github.com/alexyoung/ircdjs",
   "author": "Alex R. Young (http://alexyoung.org)",
   "directories": {
@@ -15,7 +15,7 @@
     "bcrypt": ">= 0.4.0"
   },
   "devDependencies": {
-    "nodeunit": "latest",
+    "nodeunit": "0.6.2",
     "irc": "latest"
   },
   "bin": {

@@ -6,7 +6,7 @@ var assert = require('assert'),
     server,
     testCase = require('nodeunit').testCase;
 
-exports.createServer = function(test) {
+function createServer(test) {
   server = new Server();
   server.showLog = false;
   server.config = {
@@ -22,9 +22,8 @@ exports.createServer = function(test) {
     'links': {}
   };
 
-  server.start();
-  test.done();
-};
+  server.start(test);
+}
 
 function createClient(options, fn) {
   var ranCallback = false,
@@ -42,20 +41,28 @@ function createClient(options, fn) {
   });
 }
 
-exports.clients = {
-  'valid WHOIS': function(test) {
+module.exports = {
+  setUp: function(done) {
+    createServer(done);
+  },
+
+  tearDown: function(done) {
+    server.close(done);
+  },
+
+  'test valid WHOIS': function(test) {
     createClient({ nick: 'testbot1', channel: '#test' }, function(testbot1) {
       createClient({ nick: 'testbot2', channel: '#test' }, function(testbot2) {
         testbot1.on('raw', function(data) {
-          if (data.command === 'rpl_whoisuser') {
+          if (data.command === 'JOIN') {
+            testbot1.send('WHOIS', 'testbot2');
+          } else if (data.command === 'rpl_whoisuser') {
             assert.equal('testbot2', data.args[1]);
             testbot1.disconnect();
             testbot2.disconnect();
             test.done();
           }
         });
-
-        testbot1.send('WHOIS', 'testbot2');
       });
     });
   },
@@ -90,10 +97,37 @@ exports.clients = {
         testbot1.send('WHO', '#argh');
       });
     });
+  },
+
+  'socket error handling (bug #10)': function(test) {
+    createClient({ nick: 'testbot1', channel: '#test' }, function(testbot1) {
+      createClient({ nick: 'testbot2', channel: '#test' }, function(testbot2) {
+        var user = server.users.registered.filter(function(user) { return user.nick == testbot2.nick; })[0];
+
+        // Simulate a socket issue by causing user.send to raise an exception
+        user.stream = 'bad';
+        testbot2.send('WHO', '#test');
+        
+        setTimeout(function() {
+          // There should now be one user instead of two in the channel
+          assert.equal(1, server.channels.registered['#test'].users.length);
+          testbot1.disconnect();
+          testbot2.disconnect();
+          test.done();
+        }, 10);
+      });
+    });
+  },
+  
+  "users shouldn't be able to join channel twice (bug #12)": function(test) {
+    createClient({ nick: 'testbot1', channel: '#test' }, function(testbot1) {
+      testbot1.join('#test', function() {
+        setTimeout(function() {
+          assert.equal(server.channels.registered['#test'].users.length, 1);
+          testbot1.disconnect();
+          test.done();
+        }, 10);
+      });
+    });
   }
 };
-
-exports.closeServer = function(test) {
-  server.close(test.done);
-};
-
