@@ -144,5 +144,32 @@ module.exports = {
         }
       });
     });
+  },
+
+  'invalid away status (bug #18)': function(test) {
+
+    createClient({ nick: 'huey', channel: '#aff' }, function(huey) {
+      var dewey;
+
+      huey.send('AWAY');
+      huey.on('message', function(from, to, message) {
+        assert.equal('dewey', from);
+        assert.equal('huey', to);
+        assert.equal('Hello', message);
+        console.log('test');
+        huey.disconnect();
+        dewey.disconnect();
+        test.done();
+      });
+
+      huey.on('error', function(data) {
+        if (data.command === 'err_needmoreparams') {
+          createClient({ nick: 'dewey', channel: '#aff' }, function(client) {
+            dewey = client;
+            dewey.say('huey', 'Hello');
+          });
+        }
+      });
+    });
   }
 };
