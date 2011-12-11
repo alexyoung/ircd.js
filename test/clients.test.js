@@ -135,7 +135,6 @@ module.exports = {
     createClient({ nick: 'huey', channel: '#aff' }, function(huey) {
       huey.send('MODE', '#aff', '+b');
       huey.on('error', function(data) {
-        console.log(data);
         if (data.command === 'err_needmoreparams') {
           createClient({ nick: 'dewey', channel: '#aff' }, function(dewey) {
             huey.disconnect();
