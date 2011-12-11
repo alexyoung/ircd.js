@@ -1,6 +1,12 @@
 0.0.6 / 2011-12-11
 ==================
 
+  * #18: Fixed by forcing away to have a message
+  * #17: Using `trim` on nicks
+
+0.0.6 / 2011-12-11
+==================
+
   * Fixed bug #19 by ensuring bans have valid ban masks 
 
 0.0.5 / 2011-12-03
