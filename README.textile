@@ -65,6 +65,7 @@ h3. Contributions
 
 * niklasf
 * treeform
+* guybrush (Patrick Pfeiffer)
 
 h3. License (GPL)
 

@@ -34,3 +34,8 @@ These are the current configuration search paths:
 * `/etc/ircdjs/config.json`
 * `./config/config.json` (inside the source path)
 
+## TLS
+
+if `config.key` and `config.cert` is provided it will start a tls-server.
+
+`config.{key,cert}` have to be paths to the key-files.
