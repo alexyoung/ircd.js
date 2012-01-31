@@ -1,3 +1,8 @@
+0.0.9 / 2012-01-31
+==================
+
+  * #26: Fixed server crash when sending a message to a non-existent channel
+
 0.0.6 / 2011-12-11
 ==================
 

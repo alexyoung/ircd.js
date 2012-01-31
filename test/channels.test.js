@@ -70,5 +70,23 @@ module.exports = {
         });
       });
     });
+  },
+
+  'test messaging a non-existent channel (#26)': function(test) {
+    // Create two clients
+    createClient({ nick: 'testbot1', channel: '#test' }, function(testbot1) {
+      createClient({ nick: 'testbot2', channel: '#test' }, function(testbot2) {
+        testbot1.addListener('error', function(message) {
+          if (message.command === 'err_nosuchnick') {
+            testbot1.disconnect();
+            testbot2.disconnect();
+            test.done();
+          }
+        });
+        
+        testbot1.say('#error', 'Hello');
+      });
+    });
   }
+
 };

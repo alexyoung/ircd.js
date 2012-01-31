@@ -156,7 +156,6 @@ module.exports = {
         assert.equal('dewey', from);
         assert.equal('huey', to);
         assert.equal('Hello', message);
-        console.log('test');
         huey.disconnect();
         dewey.disconnect();
         test.done();
