@@ -1,6 +1,7 @@
 0.0.10 / 2012-02-04
 ===================
 
+  * Connection timeouts are now managed
   * #25: Channels are removed when the last user leaves
 
 0.0.9 / 2012-01-31
