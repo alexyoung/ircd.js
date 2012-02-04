@@ -87,6 +87,41 @@ module.exports = {
         testbot1.say('#error', 'Hello');
       });
     });
-  }
+  },
 
+  'remove channels when the last person leaves (#25)': function(test) {
+    // Create two clients
+    createClient({ nick: 'testbot1', channel: '#test' }, function(testbot1) {
+      function done() {
+        testbot1.disconnect();
+        test.done();
+      }
+
+      var seenList = false;
+
+      testbot1.on('raw', function(data) {
+        // Double equal, because this is returned as a string but could easily
+        // be returned as an integer if the IRC client library changes
+        if (data.rawCommand == 322) {
+          if (seenList) {
+            assert.fail('Channels should be deleted');
+          } else {
+            assert.equal(data.args[1], '#test', 'The #test channel should be returned by LIST');
+
+            // Now part the channel
+            testbot1.part('#test');
+          }
+        } else if (data.rawCommand == 323 && !seenList) {
+          seenList = true;
+        } else if (data.rawCommand == 323 && seenList) {
+          done();
+        } else if (data.command === 'PART') {
+          testbot1.send('LIST');
+        }
+      });
+
+      // Send a list command
+      testbot1.send('LIST');
+    });
+  }
 };
