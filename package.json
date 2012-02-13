@@ -7,6 +7,11 @@
   "directories": {
     "lib": "./lib"
   },
+  "scripts": {
+    "test": "make test"
+  },
+  "keywords": ["irc", "ircd", "daemons", "servers", "chat"],
+  "repository": "git://github.com/alexyoung/ircd.js.git",
   "engines": {
     "node": ">= 0.2.0"
   },
@@ -21,5 +26,11 @@
   "bin": {
     "ircdjs-pwgen": "bin/pwgen.js",
     "ircdjs": "bin/ircd.js"
-  }
+  },
+  "licenses": [
+    {
+      "type": "GPL",
+      "url": "http://github.com/alexyoung/ircd.js/raw/master/LICENSE"
+    }
+  ]
 }
