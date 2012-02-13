@@ -1,53 +1,15 @@
 var assert = require('assert'),
-    path = require('path'),
-    net = require('net'),
-    irc = require('irc'),
-    Server = require(path.join(__dirname, '..', 'lib', 'server')).Server,
-    server,
+    helpers = require('./helpers.js'),
+    createClient = helpers.createClient,
     testCase = require('nodeunit').testCase;
-
-function createServer(test) {
-  server = new Server();
-  server.showLog = false;
-  server.config = {
-    'network': 'ircn',
-    'hostname': 'localhost',
-    'serverDescription': 'A Node IRC daemon',
-    'serverName': 'server',
-    'port': 6667,
-    'linkPort': 7777,
-    'whoWasLimit': 10000,
-    'token': 1,
-    'opers': {},
-    'links': {}
-  };
-
-  server.start(test);
-}
-
-function createClient(options, fn) {
-  var ranCallback = false,
-      client = new irc.Client('localhost', options.nick, {
-        channels: [options.channel],
-        port: 6667,
-        debug: false
-      });
-
-  client.addListener('join', function() {
-    if (!ranCallback) {
-      fn(client);
-      ranCallback = true;
-    }
-  });
-}
 
 module.exports = {
   setUp: function(done) {
-    createServer(done);
+    helpers.createServer(done);
   },
 
   tearDown: function(done) {
-    server.close(done);
+    helpers.close(done);
   },
 
   'test valid WHOIS': function(test) {
@@ -102,7 +64,7 @@ module.exports = {
   'socket error handling (bug #10)': function(test) {
     createClient({ nick: 'testbot1', channel: '#test' }, function(testbot1) {
       createClient({ nick: 'testbot2', channel: '#test' }, function(testbot2) {
-        var user = server.users.registered.filter(function(user) { return user.nick == testbot2.nick; })[0];
+        var user = helpers.server().users.registered.filter(function(user) { return user.nick == testbot2.nick; })[0];
 
         // Simulate a socket issue by causing user.send to raise an exception
         user.stream = 'bad';
@@ -110,7 +72,7 @@ module.exports = {
         
         setTimeout(function() {
           // There should now be one user instead of two in the channel
-          assert.equal(1, server.channels.registered['#test'].users.length);
+          assert.equal(1, helpers.server().channels.registered['#test'].users.length);
           testbot1.disconnect();
           testbot2.disconnect();
           test.done();
@@ -123,7 +85,7 @@ module.exports = {
     createClient({ nick: 'testbot1', channel: '#test' }, function(testbot1) {
       testbot1.join('#test', function() {
         setTimeout(function() {
-          assert.equal(server.channels.registered['#test'].users.length, 1);
+          assert.equal(helpers.server().channels.registered['#test'].users.length, 1);
           testbot1.disconnect();
           test.done();
         }, 10);
@@ -169,6 +131,44 @@ module.exports = {
           });
         }
       });
+    });
+  },
+
+  'simultaneous user simulation': function(test) {
+    var nicks = [], i;
+    for (i = 1; i <= 10; i++) {
+      nicks.push('user_' + i);
+    }
+
+    function assertReceive(bots, assertion, fn) {
+      bots[0].say(bots[1].nick, assertion);
+
+      var callback = function(from, to, message) {
+        assert.equal(assertion, message);
+        bots[1].removeListener('message', callback);
+        fn();
+      };
+
+      bots[1].addListener('message', callback);
+    }
+
+    helpers.createClients(nicks, '#test', function(bots) {
+      function done() {
+        bots.forEach(function(bot) {
+          bot.disconnect();
+        });
+        test.done();
+      }
+
+      var tested = 0, max = bots.length - 1;
+      for (var i = 0; i < max; i++) {
+        assertReceive([bots[i], bots[i + 1]], 'Message ' + Math.random(), function() {
+          tested++;
+          if (tested === max) {
+            done();
+          }
+        });
+      }
     });
   }
 };
