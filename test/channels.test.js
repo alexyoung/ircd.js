@@ -85,5 +85,43 @@ module.exports = {
       // Send a list command
       testbot1.send('LIST');
     });
+  },
+
+  'simultaneous user simulation': function(test) {
+    var nicks = [], i;
+    for (i = 1; i <= 100; i++) {
+      nicks.push('user_' + i);
+    }
+
+    function assertReceive(bots, assertion, fn) {
+      bots[0].say(bots[1].nick, assertion);
+
+      var callback = function(from, to, message) {
+        assert.equal(assertion, message);
+        bots[1].removeListener('message', callback);
+        fn();
+      };
+
+      bots[1].addListener('message', callback);
+    }
+
+    helpers.createClients(nicks, '#test', function(bots) {
+      function done() {
+        bots.forEach(function(bot) {
+          bot.disconnect();
+        });
+        test.done();
+      }
+
+      var tested = 0, max = bots.length - 1;
+      for (var i = 0; i < max; i++) {
+        assertReceive([bots[i], bots[i + 1]], 'Message ' + Math.random(), function() {
+          tested++;
+          if (tested === max) {
+            done();
+          }
+        });
+      }
+    });
   }
 };

@@ -1,7 +1,11 @@
 var path = require('path'),
     Server = require(path.join(__dirname, '..', 'lib', 'server')).Server,
     irc = require('irc'),
+    winston = require('winston'),
+    port = 6711,
     server;
+
+winston.remove(winston.transports.Console);
 
 function createServer(test) {
   server = new Server();
@@ -11,7 +15,7 @@ function createServer(test) {
     'hostname': 'localhost',
     'serverDescription': 'A Node IRC daemon',
     'serverName': 'server',
-    'port': 6667,
+    'port': port,
     'linkPort': 7777,
     'whoWasLimit': 10000,
     'token': 1,
@@ -26,7 +30,7 @@ function createClient(options, fn) {
   var ranCallback = false,
       client = new irc.Client('localhost', options.nick, {
         channels: [options.channel],
-        port: 6667,
+        port: port,
         debug: false
       });
 
@@ -60,5 +64,6 @@ module.exports = {
   },
   server: function() {
     return server;
-  }
+  },
+  port: port
 };

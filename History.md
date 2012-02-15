@@ -1,3 +1,10 @@
+0.0.11 / 2012-02-15
+===================
+
+  * Added winston for logging
+  * Added `SIGTERM` listener
+  * Continued cleaning up tests
+
 0.0.10 / 2012-02-04
 ===================
 

@@ -1,33 +1,19 @@
 var assert = require('assert'),
-    path = require('path'),
     net = require('net'),
-    Server = require(path.join(__dirname, '..', 'lib', 'server')).Server,
-    server,
+    helpers = require('./helpers'),
     testCase = require('nodeunit').testCase;
 
-exports.createServer = function(test) {
-  server = new Server();
-  server.showLog = false;
-  server.config = {
-    'network': 'ircn',
-    'hostname': 'localhost',
-    'serverDescription': 'A Node IRC daemon',
-    'serverName': 'server',
-    'port': 6667,
-    'linkPort': 7777,
-    'whoWasLimit': 10000,
-    'token': 1,
-    'opers': {},
-    'links': {}
-  };
+module.exports = {
+  setUp: function(done) {
+    helpers.createServer(done);
+  },
 
-  server.start();
-  test.done();
-};
+  tearDown: function(done) {
+    helpers.close(done);
+  },
 
-exports.invalidInputTests = {
-  'destroy a socket': function(test) {
-    var bob = net.createConnection(server.config.port, server.config.hostname);
+  'test destroy a socket': function(test) {
+    var bob = net.createConnection(helpers.server().config.port, helpers.server().config.hostname);
     bob.write('garbage');
     process.nextTick(function() {
       bob.destroy();
@@ -35,8 +21,8 @@ exports.invalidInputTests = {
     });
   },
   
-  'send garbage': function(test) {
-    var alice = net.createConnection(server.config.port, server.config.hostname);
+  'test send garbage': function(test) {
+    var alice = net.createConnection(helpers.server().config.port, helpers.server().config.hostname);
     alice.write('NICK alice\n\x00\x07abc\r\uAAAA', 'ascii', function() {
       alice.end();
       test.done();
@@ -44,6 +30,3 @@ exports.invalidInputTests = {
   }
 };
 
-exports.closeServer = function(test) {
-  server.close(test.done);
-};
