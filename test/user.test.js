@@ -7,8 +7,8 @@ module.exports = {
   'test timeout calculation': function(test) {
     var server = {
           config: { idleTimeout: 60 }
-        },
-        user = new User(null, server);
+        }
+      , user = new User(null, server);
 
     assert.ok(!user.hasTimedOut());
     user.lastPing = (Date.now() - 60001);

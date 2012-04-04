@@ -109,7 +109,6 @@ module.exports = {
   },
 
   'invalid away status (bug #18)': function(test) {
-
     createClient({ nick: 'huey', channel: '#aff' }, function(huey) {
       var dewey;
 
