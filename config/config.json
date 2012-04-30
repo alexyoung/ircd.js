@@ -4,6 +4,7 @@
   "serverName": "server1",
   "port": 6667,
   "linkPort": 7777,
+  "motd": "Message of the day",
   "whoWasLimit": 10000,
   "token": 1,
   "opers": {

@@ -2,6 +2,7 @@
   "hostname": "localhost",
   "serverDescription": "A Node IRC daemon",
   "serverName": "server1",
+  "motd": "Message of the day",
   "port": 6667,
   "whoWasLimit": 10000,
   "opers": {
