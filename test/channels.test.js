@@ -17,7 +17,7 @@ module.exports = {
     createClient({ nick: 'testbot1', channel: '#test' }, function(testbot1) {
       createClient({ nick: 'testbot2', channel: '#test' }, function(testbot2) {
 
-        testbot1.addListener('error', function(message) {
+        testbot1.on('error', function(message) {
           if (message.command === 'err_needmoreparams') {
             testbot1.disconnect();
             testbot2.disconnect();
@@ -38,7 +38,7 @@ module.exports = {
     // Create two clients
     createClient({ nick: 'testbot1', channel: '#test' }, function(testbot1) {
       createClient({ nick: 'testbot2', channel: '#test' }, function(testbot2) {
-        testbot1.addListener('error', function(message) {
+        testbot1.on('error', function(message) {
           if (message.command === 'err_nosuchnick') {
             testbot1.disconnect();
             testbot2.disconnect();
@@ -102,7 +102,7 @@ module.exports = {
         fn();
       };
 
-      bots[1].addListener('message', callback);
+      bots[1].on('message', callback);
     }
 
     helpers.createClients(nicks, '#test', function(bots) {
@@ -122,6 +122,48 @@ module.exports = {
           }
         });
       }
+    });
+  },
+
+  'test join with invalid key': function(test) {
+    createClient({ nick: 'testbot1', channel: '#test' }, function(testbot1) {
+      // Set the channel key to 'test'
+      testbot1.send('MODE #test +k test');
+      testbot1.on('raw', function(data) {
+        if (data.rawCommand === '324') {
+          createClient({ nick: 'testbot2', channel: '#test2' }, function(testbot2) {
+            testbot2.on('error', function(message) {
+              assert.equal(message.rawCommand, '475', 'Should receive a bad channel key');
+              testbot1.disconnect();
+              testbot2.disconnect();
+              test.done();
+            });
+            
+            // Join without the correct key
+            testbot2.send('JOIN #test');
+          });
+        }
+      });
+    });
+  },
+
+  'test join with valid key': function(test) {
+    createClient({ nick: 'testbot1', channel: '#test' }, function(testbot1) {
+      // Set the channel key to 'password'
+      testbot1.send('MODE #test +k password');
+      testbot1.on('raw', function(data) {
+        if (data.rawCommand === '324') {
+          createClient({ nick: 'testbot2', channel: '#test password' }, function(testbot2) {
+            testbot2.on('raw', function(data) {
+              if (data.rawCommand === '324') {
+                testbot1.disconnect();
+                testbot2.disconnect();
+                test.done();
+              }
+            });
+          });
+        }
+      });
     });
   }
 };
