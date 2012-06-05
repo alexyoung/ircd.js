@@ -7,7 +7,7 @@ var path = require('path'),
 
 winston.remove(winston.transports.Console);
 
-function createServer(test) {
+function createServer(test, usepass) {
   server = new Server();
   server.showLog = false;
   server.config = {
@@ -23,6 +23,10 @@ function createServer(test) {
     'links': {}
   };
 
+  if (usepass) {
+    server.config.serverPassword = '$2a$10$T1UJYlinVUGHqfInKSZQz./CHrYIVVqbDO3N1fRNEUvFvSEcshNdC';
+  }
+
   server.start(test);
 }
 
@@ -31,7 +35,8 @@ function createClient(options, fn) {
       client = new irc.Client('localhost', options.nick, {
         channels: [options.channel],
         port: port,
-        debug: false
+        debug: false,
+        password: options.password
       });
 
   client.addListener('join', function() {

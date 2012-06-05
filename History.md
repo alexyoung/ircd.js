@@ -1,3 +1,7 @@
+0.0.14 / 2012-06-05
+
+  * Added connection passwords (PASS)
+
 0.0.12 / 2012-05-01
 
   * Added MOTD (sespindola)

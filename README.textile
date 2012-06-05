@@ -18,6 +18,7 @@ The server will allow clients to connect, join channels, change topics; basic st
 
 Done:
 
+* PASS (connection password)
 * PING/PONG
 * PRIVMSG
 * MODE
