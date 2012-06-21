@@ -11,6 +11,10 @@ This is what a configuration file looks like:
           "opers": {
             "alex": { "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8" }
           },
+          "channels": {
+            "channel1": { "topic": "First Channel" },
+            "channel2": { "topic": "Second Channel" }
+          },
           "links": {
             "server2": { "host": "127.0.0.1",
                          "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8",
@@ -25,6 +29,7 @@ This is what a configuration file looks like:
 * `port`: The port the server should listen on
 * `whoWasLimit`: The number of `WHOWAS` records to store in memory
 * `opers`: A list of operators with bcrypted passwords (the `pwgen.js` script can encrypt passwords for you)
+* `channels`: A list of channels that are created on startup.
 * `links`: This is for other server links and can be ignored for now
 
 ## Configuration File Locations
