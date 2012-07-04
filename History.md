@@ -1,3 +1,10 @@
+0.0.15 / 2012-07-04
+
+  * Default channels (Sebastian A. Espindola)
+  * Migrated tests to Mocha
+  * Tested against Node 0.8
+  * Locked down module versions
+
 0.0.14 / 2012-06-05
 
   * Added connection passwords (PASS)
