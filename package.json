@@ -1,7 +1,7 @@
 {
   "name": "ircdjs",
   "description": "An IRCD for Node",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "homepage": "https://github.com/alexyoung/ircd.js",
   "author": "Alex R. Young (http://alexyoung.org)",
   "directories": {
@@ -19,12 +19,12 @@
   "dependencies": {
     "carrier": ">= 0.0.3",
     "bcrypt": ">= 0.4.0",
-    "winston": "latest",
-    "commander": "latest"
+    "winston": "0.6.1",
+    "commander": "git://github.com/visionmedia/commander.js.git"
   },
   "devDependencies": {
-    "nodeunit": "0.6.2",
-    "irc": "latest"
+    "mocha": "1.2.2",
+    "irc": "0.3.4"
   },
   "bin": {
     "ircdjs-pwgen": "bin/pwgen.js",

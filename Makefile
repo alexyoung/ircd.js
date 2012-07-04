@@ -1,4 +1,4 @@
 test:
-	./node_modules/.bin/nodeunit test/*.test.js
+	./node_modules/.bin/mocha --reporter list -c --ui exports test/*.test.js
 
 .PHONY: test
