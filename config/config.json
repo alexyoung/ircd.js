@@ -19,5 +19,6 @@
                  "password": "$2a$10$T1UJYlinVUGHqfInKSZQz./CHrYIVVqbDO3N1fRNEUvFvSEcshNdC",
                  "port": 7778,
                  "token": 2 }
-  }
+  },
+  "pingTimeout": 120
 }
