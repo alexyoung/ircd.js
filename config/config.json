@@ -1,18 +1,18 @@
-{ "network":  "ircn",
-  "hostname": "localhost",
-  "serverDescription": "A Node IRC daemon",
+{ "network":  "botnetwork",
+  "hostname": "matej.me",
+  "serverDescription": "matej.me IRC server",
   "serverName": "server1",
   "port": 6667,
   "linkPort": 7777,
-  "motd": "Message of the day",
+  "motd": "No person knows everything.",
   "whoWasLimit": 10000,
   "token": 1,
   "opers": {
-    "alex": { "password": "$2a$10$T1UJYlinVUGHqfInKSZQz./CHrYIVVqbDO3N1fRNEUvFvSEcshNdC" }
+    "matej": { "password": "$2a$10$qJVv4tVyCdZHByhTL7f2X.qg0U0OxFffdKQp/v0UYynV/oxMNCoH2" },
+    "lamt": { "password": "$2a$10$pzEkDJWo7z/183R1li4h3ONicE885gzscHg9g5LC1fW1maU3A8X1S" }
   },
   "channels": {
-    "channel1": { "topic": "First Channel" },
-    "channel2": { "topic": "Second Channel" }
+    "general": { "topic": "General Channel" }
   },
   "links": {
     "server2": { "host": "127.0.0.1",
@@ -20,5 +20,6 @@
                  "port": 7778,
                  "token": 2 }
   },
-  "pingTimeout": 120
+  "pingTimeout": 120,
+  "maxNickLength": 30
 }
