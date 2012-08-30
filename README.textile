@@ -64,6 +64,7 @@ Set up configuration in <code>/etc/ircdjs/config.json</code>.
 
 h3. Contributions
 
+* jazzychad (Chad Etzel)
 * Sebastian A. Espindola (sespindola)
 * niklasf
 * treeform
