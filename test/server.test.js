@@ -17,8 +17,17 @@ module.exports = {
       createClient({ nick: 'testbot1', channel: '#test', password: 'test' }, function(testbot1) {
         testbot1.on('raw', function(data) {
           if (data.command === 'rpl_channelmodeis') {
-            testbot1.disconnect();
-            done();
+            // Ensure users can't join with the same nicks
+            createClient({ nick: 'testbot1', channel: '#test', password: 'test' }, function(testbot2) {
+              testbot2.on('raw', function(data) {
+                if (data.command === 'rpl_channelmodeis') {
+                  assert.notEqual(testbot1.nick, testbot2.nick, "The same nick shouldn't be used more than once");
+                  testbot1.disconnect();
+                  testbot2.disconnect();
+                  done();
+                }
+              });
+            });
           }
         });
       });

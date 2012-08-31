@@ -1,3 +1,8 @@
+0.0.16 / 2012-08-31
+
+  * Changed the way PASS is handled (must be sent before NICK/USER)
+  * Fixed a bug where nick collisions could occur when server passwords were used
+
 0.0.15 / 2012-07-04
 
   * Default channels (Sebastian A. Espindola)
