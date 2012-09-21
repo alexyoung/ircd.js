@@ -1,3 +1,7 @@
+0.0.17 / 2012-09-21
+
+  * Fixes parsing of messages with extra colons (#49)
+
 0.0.16 / 2012-08-31
 
   * Changed the way PASS is handled (must be sent before NICK/USER)
