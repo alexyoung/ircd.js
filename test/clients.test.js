@@ -185,6 +185,29 @@ module.exports = {
           });
         }
       });
+    },
+
+    'Send messages with colons (#49)': function(done) {
+      var createClient = this.server.createClient.bind(this.server)
+        , server = this.server.server
+        , message = 'this is my message : hello tom'
+        ;
+
+      createClient({ nick: 'testbot1', channel: '#test' }, function(testbot1) {
+        createClient({ nick: 'testbot2', channel: '#test' }, function(testbot2) {
+          var user = server.users.registered.filter(function(user) { return user.nick == testbot2.nick; })[0];
+
+          testbot1.on('message', function(from, to, m) {
+            assert.equal(message, m);
+
+            testbot1.disconnect();
+            testbot2.disconnect();
+            done();
+          });
+
+          testbot2.say('#test', message);
+        });
+      });
     }
   }
 };
