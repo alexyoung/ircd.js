@@ -1,4 +1,5 @@
 var assert = require('assert')
+  , Server = require('../lib/server').Server
   , helpers = require('./helpers.js')
   ;
 
@@ -31,6 +32,15 @@ module.exports = {
           }
         });
       });
+    },
+
+    'test isValidPositiveInteger': function() {
+      assert(Server.prototype.isValidPositiveInteger('1'));
+      assert(!Server.prototype.isValidPositiveInteger('001'));
+      assert(!Server.prototype.isValidPositiveInteger('999999999999999'));
+      assert(!Server.prototype.isValidPositiveInteger('-1'));
+      assert(!Server.prototype.isValidPositiveInteger('FF0'));
+      assert(!Server.prototype.isValidPositiveInteger('1A'));
     }
   }
 };
