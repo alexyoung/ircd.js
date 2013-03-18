@@ -1,11 +1,13 @@
 var assert = require('assert')
- ,  helpers = require('./helpers.js')
- ;
+  , helpers = require('./helpers.js')
+  , irc = require('irc')
+  , port = 6661
+  ;
 
 module.exports = {
   'Clients': {
     beforeEach: function(done) {
-      this.server = new helpers.MockServer(done, false, 6661);
+      this.server = new helpers.MockServer(done, false, port);
     },
 
     afterEach: function(done) {
@@ -78,7 +80,7 @@ module.exports = {
           // Simulate a socket issue by causing user.send to raise an exception
           user.stream = 'bad';
           testbot2.send('WHO', '#test');
-          
+
           setTimeout(function() {
             // There should now be one user instead of two in the channel
             assert.equal(1, server.channels.registered['#test'].users.length);
@@ -89,7 +91,7 @@ module.exports = {
         });
       });
     },
-    
+
     "users shouldn't be able to join channel twice (bug #12)": function(done) {
       var createClient = this.server.createClient.bind(this.server)
         , server = this.server.server;
@@ -187,7 +189,7 @@ module.exports = {
       });
     },
 
-    'Send messages with colons (#49)': function(done) {
+    'send messages with colons (#49)': function(done) {
       var createClient = this.server.createClient.bind(this.server)
         , server = this.server.server
         , message = 'this is my message : hello tom'
@@ -207,6 +209,26 @@ module.exports = {
 
           testbot2.say('#test', message);
         });
+      });
+    },
+
+    'invalid nicks (#27)': function(done) {
+      var nick = 'a|ex'
+        , self = this
+        , client = new irc.Client('localhost', nick, {
+            channels: ['#test']
+          , port: port
+          , debug: false
+        });
+
+      client.addListener('error', function(message) {
+        var connectedUsers = self.server.server.users.registered;
+        if (message.command === 'err_erroneusnickname') {
+          assert.equal(1, connectedUsers.length);
+          assert.equal(null, connectedUsers[0].nick);
+          client.disconnect();
+          done();
+        }
       });
     }
   }

@@ -49,7 +49,7 @@ module.exports = {
               done();
             }
           });
-          
+
           testbot1.say('#error', 'Hello');
         });
       });
