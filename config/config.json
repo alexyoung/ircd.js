@@ -20,6 +20,11 @@
                  "port": 7778,
                  "token": 2 }
   },
+  "socketio": {
+    "host": "localhost",
+    "port": 8765,
+    "options": {}  
+  },
   "pingTimeout": 120,
   "maxNickLength": 30
 }

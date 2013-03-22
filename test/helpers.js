@@ -19,6 +19,11 @@ function MockServer(done, usepass, port) {
     'whoWasLimit': 10000,
     'token': 1,
     'opers': {},
+    'socketio': {
+      'host': 'localhost',
+      'port': 8765,
+      'options': {}  
+    },
     'links': {}
   };
 
