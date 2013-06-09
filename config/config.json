@@ -2,7 +2,9 @@
   "hostname": "localhost",
   "serverDescription": "A Node IRC daemon",
   "serverName": "server1",
-  "port": 6667,
+  "listen": [
+    { "port": 6667, "secure": false }
+  ],
   "linkPort": 7777,
   "motd": "Message of the day",
   "whoWasLimit": 10000,

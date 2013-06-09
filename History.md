@@ -1,3 +1,8 @@
+0.0.18 / 2013-06-09
+
+  * Added support for multiple listening ports
+  * Made winston accessible from outside
+
 0.0.17 / 2012-09-21
 
   * Fixes parsing of messages with extra colons (#49)
