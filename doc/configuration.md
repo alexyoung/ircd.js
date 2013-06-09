@@ -6,7 +6,10 @@ This is what a configuration file looks like:
           "hostname": "localhost",
           "serverDescription": "A Node IRC daemon",
           "serverName": "server1",
-          "port": 6667,
+          "listen": [
+            { "port": 6667, "secure": false },
+            { "port": 9999, "secure": true, "key": "/path/to/key", "cert": "/path/to/cert" }
+          ],
           "whoWasLimit": 10000,
           "opers": {
             "alex": { "password": "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8" }
