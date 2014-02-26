@@ -70,6 +70,7 @@ h3. Contributions
 * niklasf
 * treeform
 * guybrush (Patrick Pfeiffer)
+* eirikb (Eirik Brandtzæg)
 
 h3. License (GPL)
 
