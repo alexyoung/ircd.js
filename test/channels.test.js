@@ -12,6 +12,39 @@ module.exports = {
       this.server.close(done);
     },
 
+    'test rejoin': function(done) {
+      var createClient = this.server.createClient.bind(this.server);
+
+      // Create two clients
+      createClient({ nick: 'testbot1', channel: '#test' }, function(testbot1) {
+        createClient({ nick: 'testbot2', channel: '#test' }, function(testbot2) {
+
+          var i = 0;
+          testbot2.on('raw', function(data) {
+            switch (data.command) {
+              case 'rpl_namreply':
+                var names = data.args[3].split(' ').filter(function(f) {
+                  return f.match(/testbot/);
+                });
+                assert.equal(2, names.length);
+                i++;
+                if (i === 1) {
+                  testbot2.part('#test');
+                } else {
+                  testbot1.disconnect();
+                  testbot2.disconnect();
+                  done();
+                }
+                break;
+             case 'PART':
+               testbot2.join('#test');
+               break;
+            }
+          });
+        });
+      });
+    },
+
     'test bad join (#22)': function(done) {
       // Create two clients
       var createClient = this.server.createClient.bind(this.server);
