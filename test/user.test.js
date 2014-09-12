@@ -12,7 +12,7 @@ module.exports = {
         , user = new User(null, server);
 
       assert.ok(!user.hasTimedOut());
-      user.lastPing = (Date.now() - 60001);
+      user.lastPing = (Date.now() - 61000);
       assert.ok(user.hasTimedOut());
 
       done();
