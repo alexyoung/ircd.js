@@ -1,7 +1,7 @@
 {
   "name": "ircdjs",
   "description": "An IRCD for Node",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "homepage": "https://github.com/alexyoung/ircd.js",
   "author": "Alex R. Young (http://alexyoung.org)",
   "main" : "./lib/server.js",
@@ -15,17 +15,17 @@
   "keywords": ["irc", "ircd", "daemons", "servers", "chat"],
   "repository": "git://github.com/alexyoung/ircd.js.git",
   "engines": {
-    "node": ">= 0.2.0"
+    "node": ">= 0.10.3 < 0.11"
   },
   "dependencies": {
-    "carrier": ">= 0.0.3",
-    "bcrypt": ">= 0.4.0",
-    "winston": "0.6.1",
+    "carrier": ">= 0.1.13",
+    "bcrypt": ">= 0.8.0",
+    "winston": "0.7.3",
     "commander": "git://github.com/visionmedia/commander.js.git"
   },
   "devDependencies": {
-    "mocha": "1.2.2",
-    "irc": "0.3.4"
+    "mocha": "1.21.4",
+    "irc": "0.3.5"
   },
   "bin": {
     "ircdjs-pwgen": "bin/pwgen.js",
