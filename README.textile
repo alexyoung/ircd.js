@@ -12,7 +12,7 @@
 
 h3. About
 
-I'm implementing rfc1459/rfc2812 in "Node":http://nodejs.org/.
+I'm implementing "RFC 1459":https://tools.ietf.org/html/rfc1459 / "RFC 2812":https://tools.ietf.org/html/rfc2812 for "Node.js":http://nodejs.org/.
 
 The server will allow clients to connect, join channels, change topics; basic stuff.
 
