@@ -50,7 +50,7 @@ Planned:
 * Server-to-server messages for JOIN, NJOIN, MODE, PRIVSG and NOTICE
 * SQUIT and QUIT for links
 * Server to server communication
-* More basic commands: NOTICE, MOTD, LINKS, TRACE, ADMIN, INFO
+* More basic commands: NOTICE, LINKS, TRACE, ADMIN, INFO
 * Log files and logging options
 * Local ops (+O)
 * Stats command
@@ -65,12 +65,13 @@ h3. Contributions
 
 * overra
 * jazzychad (Chad Etzel)
-* Sebastian A. Espindola (sespindola)
+* sespindola (Sebastian A. Espindola)
 * niklasf
 * treeform
 * guybrush (Patrick Pfeiffer)
 * eirikb (Eirik Brandtzæg)
 * andrew12 (Andrew Herbig)
+* jrasanen (Jussi Räsänen)
 
 h3. License (GPL)
 
