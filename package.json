@@ -21,7 +21,7 @@
     "carrier": ">= 0.1.13",
     "bcrypt": ">= 0.8.0",
     "winston": "0.7.3",
-    "commander": "git://github.com/visionmedia/commander.js.git"
+    "commander": "git://github.com/tj/commander.js.git"
   },
   "devDependencies": {
     "mocha": "1.21.4",
