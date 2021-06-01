@@ -21,6 +21,7 @@ Done:
 * PASS (connection password)
 * PING/PONG
 * PRIVMSG
+* NOTICE
 * MODE
 * JOIN
 * TOPIC
@@ -50,7 +51,7 @@ Planned:
 * Server-to-server messages for JOIN, NJOIN, MODE, PRIVSG and NOTICE
 * SQUIT and QUIT for links
 * Server to server communication
-* More basic commands: NOTICE, LINKS, TRACE, ADMIN, INFO
+* More basic commands: LINKS, TRACE, ADMIN, INFO
 * Log files and logging options
 * Local ops (+O)
 * Stats command
